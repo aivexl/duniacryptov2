@@ -1,11 +1,9 @@
-import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-// Import semua type dan constant dari CoinGeckoUtils agar file ini hanya berisi komponen
-import type { CoinAPI, Global, Coin, CoinGeckoContextType } from './CoinGeckoUtils';
+import React, { useContext, useEffect, useState, type ReactNode } from 'react';
+import type { CoinAPI, Global, Coin } from './CoinGeckoUtils';
 import { COINS_URL, GLOBAL_URL } from './CoinGeckoUtils';
+import CoinGeckoContext from './CoinGeckoContextContext'; // Context di file terpisah
 
-// Context CoinGecko
-const CoinGeckoContext = createContext<CoinGeckoContextType | undefined>(undefined);
-
+// Komponen provider CoinGecko
 export const CoinGeckoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [coins, setCoins] = useState<Coin[] | null>(null);
   const [global, setGlobal] = useState<Global | null>(null);
@@ -57,6 +55,7 @@ export const CoinGeckoProvider: React.FC<{ children: ReactNode }> = ({ children 
   );
 };
 
+// Hook untuk akses context
 export function useCoinGecko() {
   const ctx = useContext(CoinGeckoContext);
   if (!ctx) throw new Error('useCoinGecko must be used within a CoinGeckoProvider');
