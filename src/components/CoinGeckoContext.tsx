@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
-interface Coin {
+type Coin = {
   id: string;
   symbol: string;
   name: string;
@@ -11,24 +10,36 @@ interface Coin {
   market_cap_rank: number;
   price_change_percentage_24h: number;
   total_volume: number;
-}
+};
 
-interface CoinGeckoContextType {
+type Global = unknown; // TODO: replace with proper type if needed
+
+type CoinAPI = {
+  id: string;
+  symbol: string;
+  name: string;
+  current_price: number;
+  market_cap: number;
+  price_change_percentage_24h: number;
+  total_volume: number;
+};
+
+type CoinGeckoContextType = {
   coins: Coin[] | null;
-  global: unknown;
+  global: Global | null;
   loading: boolean;
   error: string | null;
   refresh: () => void;
-}
+};
 
 const CoinGeckoContext = createContext<CoinGeckoContextType | undefined>(undefined);
 
-const COINS_URL = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false';
-const GLOBAL_URL = 'https://api.coingecko.com/api/v3/global';
+const COINS_URL = '/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false';
+const GLOBAL_URL = '/api/coingecko/api/v3/global';
 
 export const CoinGeckoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [coins, setCoins] = useState<Coin[] | null>(null);
-  const [global, setGlobal] = useState<unknown>(null);
+  const [global, setGlobal] = useState<Global | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,11 +54,11 @@ export const CoinGeckoProvider: React.FC<{ children: ReactNode }> = ({ children 
       if (!coinsRes.ok || !globalRes.ok) throw new Error('Failed to fetch CoinGecko data. Please try again later.');
       const coinsData = await coinsRes.json();
       const globalData = await globalRes.json();
-      const transformedCoins = coinsData.map((coin: Record<string, unknown>, index: number) => ({
-        id: String(coin.id),
-        symbol: String(coin.symbol),
-        name: String(coin.name),
-        image: `https://assets.coincap.io/assets/icons/${String(coin.symbol).toLowerCase()}@2x.png`,
+      const transformedCoins = coinsData.map((coin: CoinAPI, index: number) => ({
+        id: coin.id,
+        symbol: coin.symbol,
+        name: coin.name,
+        image: `https://assets.coincap.io/assets/icons/${coin.symbol.toLowerCase()}@2x.png`,
         current_price: parseFloat(String(coin.current_price)),
         market_cap: parseFloat(String(coin.market_cap)),
         market_cap_rank: index + 1,

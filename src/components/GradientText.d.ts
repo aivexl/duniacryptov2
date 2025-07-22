@@ -1,5 +1,5 @@
 import { FC, ReactNode } from "react";
-interface GradientTextProps {
+export interface GradientTextProps {
   children: ReactNode;
   colors: string[];
   animationSpeed: number;
