@@ -43,39 +43,50 @@ export default function ArticleDetailClient({ article }) {
       {/* Main Layout */}
       <main className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-4 md:py-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 flex-1 w-full">
         <section className="col-span-1 xl:col-span-2 space-y-4 md:space-y-6">
-          {/* Article Header */}
-          <div className="bg-duniacrypto-panel rounded-lg shadow p-6">
-            <div className="flex gap-6 items-start">
+          {/* Article Header with Full-Size Image */}
+          <div className="bg-duniacrypto-panel rounded-lg shadow overflow-hidden">
+            {/* Hero Image - Same size as slider */}
+            <div className="relative w-full" style={{height: '400px'}}>
               <img
                 src={article.imageUrl || '/Asset/duniacrypto.png'}
                 alt={article.image?.alt || article.title}
-                className="w-32 h-32 rounded-md object-cover bg-black/30 flex-shrink-0 hover:scale-105 transition-transform"
+                className="w-full h-full object-cover bg-black/30"
+                onError={(e) => {
+                  e.target.src = '/Asset/duniacrypto.png';
+                }}
               />
-              <div className="flex-1">
-                <h1 className="text-2xl font-bold text-white mb-2">{article.title}</h1>
-                <div className="text-xs text-gray-400 mb-2 flex gap-2 items-center">
+              {/* Category Badge */}
+              <div className="absolute top-4 left-4">
+                <span className={`inline-block px-3 py-1.5 rounded-full text-white font-bold text-sm tracking-wide shadow-lg ${
+                  article.category === 'newsroom' ? 'bg-blue-700' : 'bg-blue-500'
+                }`}>
+                  {article.category === 'newsroom' ? 'News' : 'Academy'}
+                </span>
+              </div>
+              {/* Title Overlay */}
+              <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-6">
+                <h1 className="text-2xl md:text-3xl font-bold text-white line-clamp-2 drop-shadow-lg mb-4">
+                  {article.title}
+                </h1>
+                <div className="text-sm text-gray-200 flex gap-2 items-center">
                   <span>{article.source || 'Dunia Crypto'}</span>
                   <span>•</span>
                   <span>{article.publishedAt ? dayjs(article.publishedAt).format('DD MMM YYYY HH:mm') : 'Baru saja'}</span>
-                  <span>•</span>
-                  <span className={
-                    article.category === 'newsroom'
-                      ? 'inline-block px-2 py-0.5 rounded bg-blue-700 text-white font-bold text-[10px] tracking-wide'
-                      : 'inline-block px-2 py-0.5 rounded bg-blue-500 text-white font-bold text-[10px] tracking-wide'
-                  }>
-                    {article.category === 'newsroom' ? 'News' : 'Academy'}
-                  </span>
                 </div>
-                {article.excerpt && (
-                  <div className="text-gray-200 mb-2 whitespace-pre-line">{article.excerpt}</div>
-                )}
               </div>
             </div>
+            
+            {/* Article Excerpt */}
+            {article.excerpt && (
+              <div className="p-6 border-b border-gray-700">
+                <div className="text-gray-200 text-lg leading-relaxed">{article.excerpt}</div>
+              </div>
+            )}
           </div>
           
           {/* Article Content */}
           <div className="bg-duniacrypto-panel rounded-lg shadow p-6">
-            <div className="text-gray-200 whitespace-pre-line leading-relaxed">
+            <div className="text-gray-200 whitespace-pre-line leading-relaxed text-base">
               {article.content}
             </div>
           </div>
