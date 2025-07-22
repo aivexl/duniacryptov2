@@ -23,7 +23,8 @@ export default function AcademyPage() {
           <Link
             key={article.slug}
             href={`/academy/${article.slug}`}
-            className="bg-duniacrypto-panel rounded-lg shadow flex flex-col overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all group cursor-pointer"
+            className="bg-duniacrypto-panel rounded-lg shadow flex flex-col overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all group cursor-pointer group-hover:bg-white/10"
+            style={{ textDecoration: 'none' }}
           >
             <div className="w-full aspect-[4/3] bg-gray-800 flex items-center justify-center">
               <img
@@ -34,7 +35,7 @@ export default function AcademyPage() {
               />
             </div>
             <div className="flex-1 flex flex-col p-4">
-              <h2 className="text-lg font-semibold mb-2 line-clamp-2 min-h-[48px]">{article.title}</h2>
+              <h2 className="text-lg font-semibold mb-2 line-clamp-2 min-h-[48px] no-underline" style={{ textDecoration: 'none' }}>{article.title}</h2>
               <p className="text-gray-200 mb-2 line-clamp-3 min-h-[60px]">{article.excerpt}</p>
             </div>
           </Link>

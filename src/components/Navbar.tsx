@@ -9,7 +9,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-duniacrypto-panel border-b border-gray-800">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
         <div className="flex items-center space-x-3">
-          <Link href="/" className="flex items-center space-x-3 group">
+          <Link href="/" className="flex items-center space-x-3 group no-underline hover:no-underline focus:no-underline active:no-underline" style={{ textDecoration: 'none' }}>
             <img src="/Asset/duniacrypto.png" alt="Dunia Crypto Logo" className="h-10 w-10 object-contain group-hover:scale-105 transition-transform" style={{filter: 'drop-shadow(0 0 16px #22c5ff)'}} />
             <GradientText
               colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}

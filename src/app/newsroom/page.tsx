@@ -23,7 +23,8 @@ export default function NewsroomPage() {
           <Link
             key={item.slug}
             href={`/newsroom/${item.slug}`}
-            className="flex items-center bg-duniacrypto-panel rounded-lg shadow hover:ring-2 hover:ring-blue-400 transition-all group cursor-pointer overflow-hidden"
+            className="flex items-center bg-duniacrypto-panel rounded-lg shadow hover:ring-2 hover:ring-blue-400 transition-all group cursor-pointer overflow-hidden group-hover:bg-white/10"
+            style={{ textDecoration: 'none' }}
           >
             <div className="flex-shrink-0 w-20 h-20 bg-gray-800 flex items-center justify-center">
               <img
@@ -34,7 +35,7 @@ export default function NewsroomPage() {
               />
             </div>
             <div className="flex-1 flex flex-col p-4 min-w-0">
-              <h2 className="text-lg font-semibold mb-1 truncate">{item.title}</h2>
+              <h2 className="text-lg font-semibold mb-1 truncate no-underline" style={{ textDecoration: 'none' }}>{item.title}</h2>
               <p className="text-gray-200 text-sm line-clamp-2">{item.excerpt}</p>
             </div>
           </Link>
