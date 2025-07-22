@@ -6,6 +6,9 @@ export default async function handler(req, res) {
   const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
   const apiVersion = process.env.NEXT_PUBLIC_SANITY_API_VERSION || '2025-07-22';
   
+  // Set cache headers for better performance
+  res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300'); // 5 minutes cache
+  
   // Handle different types of requests
   if (slug[0] === 'query') {
     // Handle GROQ queries
@@ -38,7 +41,10 @@ export default async function handler(req, res) {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=300',
         },
+        // Add timeout to prevent hanging requests
+        signal: AbortSignal.timeout(10000), // 10 seconds timeout
       });
 
       if (!response.ok) {
@@ -48,9 +54,23 @@ export default async function handler(req, res) {
       }
 
       const data = await response.json();
+      
+      // Add ETag for better caching
+      const etag = Buffer.from(JSON.stringify(data)).toString('base64');
+      res.setHeader('ETag', etag);
+      
       res.status(200).json(data);
     } catch (error) {
       console.error('Sanity API Error:', error);
+      
+      // If it's a timeout error, return a more specific message
+      if (error.name === 'AbortError') {
+        return res.status(408).json({ 
+          error: 'Request timeout - Sanity API took too long to respond',
+          details: error.message 
+        });
+      }
+      
       res.status(500).json({ 
         error: 'Failed to fetch data from Sanity',
         details: error.message 
@@ -67,9 +87,12 @@ export default async function handler(req, res) {
         method: req.method,
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=300',
           ...(req.headers.authorization && { 'Authorization': req.headers.authorization }),
         },
         ...(req.method !== 'GET' && { body: JSON.stringify(req.body) }),
+        // Add timeout
+        signal: AbortSignal.timeout(10000),
       });
 
       if (!response.ok) {
@@ -77,9 +100,22 @@ export default async function handler(req, res) {
       }
 
       const data = await response.json();
+      
+      // Add ETag for better caching
+      const etag = Buffer.from(JSON.stringify(data)).toString('base64');
+      res.setHeader('ETag', etag);
+      
       res.status(200).json(data);
     } catch (error) {
       console.error('Sanity API Error:', error);
+      
+      if (error.name === 'AbortError') {
+        return res.status(408).json({ 
+          error: 'Request timeout - Sanity API took too long to respond',
+          details: error.message 
+        });
+      }
+      
       res.status(500).json({ 
         error: 'Failed to fetch data from Sanity',
         details: error.message 

@@ -8,11 +8,30 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Experimental settings to improve chunk loading
+  
+  // Performance optimizations
   experimental: {
-    optimizePackageImports: ['react', 'next'],
+    optimizePackageImports: ['react', 'next', 'dayjs'],
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
   },
-  // Increase timeout for chunk loading
+  
+  // Image optimization
+  images: {
+    domains: ['cdn.sanity.io'],
+    formats: ['image/webp', 'image/avif'],
+  },
+  
+  // Compression
+  compress: true,
+  
+  // Webpack optimizations
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
       config.watchOptions = {
@@ -21,8 +40,31 @@ const nextConfig: NextConfig = {
         aggregateTimeout: 300,
       };
     }
+    
+    // Optimize bundle size
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      },
+    };
+    
     return config;
   },
+  
+  // Enable SWC minification for faster builds
+  swcMinify: true,
+  
+  // Reduce bundle size
+  output: 'standalone',
+  
   /* config options here */
 };
 
