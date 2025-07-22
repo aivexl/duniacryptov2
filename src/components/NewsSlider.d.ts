@@ -1,3 +1,3 @@
 import { FC } from "react";
-declare const NewsSlider: FC<Record<string, any>>;
+declare const NewsSlider: FC<Record<string, unknown>>;
 export default NewsSlider; 
