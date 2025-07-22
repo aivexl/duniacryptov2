@@ -77,29 +77,31 @@ export default function ArticleDetailClient({ article, relatedArticles = [] }) {
         {/* Related Articles */}
         {relatedArticles.length > 0 && (
           <div className="bg-duniacrypto-panel rounded-lg shadow p-6">
-            <h3 className="text-xl font-bold text-white mb-4">Artikel Terkait</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {relatedArticles.slice(0, 6).map((relatedArticle) => (
+            <h3 className="text-xl font-bold text-white mb-6">Artikel Terkait</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {relatedArticles.slice(0, 4).map((relatedArticle) => (
                 <a
                   key={relatedArticle._id}
                   href={`/${relatedArticle.category === 'newsroom' ? 'newsroom' : 'academy'}/${relatedArticle.slug.current}`}
-                  className="block group hover:bg-white/10 rounded-lg p-3 transition cursor-pointer no-underline hover:no-underline focus:no-underline active:no-underline"
+                  className="block group hover:bg-white/10 rounded-lg p-4 transition cursor-pointer no-underline hover:no-underline focus:no-underline active:no-underline border border-gray-700 hover:border-gray-600"
                 >
-                  <div className="flex gap-3">
+                  <div className="flex gap-4">
                     <img
                       src={relatedArticle.imageUrl || '/Asset/duniacrypto.png'}
                       alt={relatedArticle.title}
-                      className="w-16 h-16 object-cover rounded"
+                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
                       onError={(e) => {
                         e.target.src = '/Asset/duniacrypto.png';
                       }}
                     />
-                    <div className="flex-1">
-                      <h4 className="text-white font-semibold line-clamp-2 group-hover:text-blue-300 transition">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-white font-semibold text-base line-clamp-2 group-hover:text-blue-300 transition mb-2 leading-tight">
                         {relatedArticle.title}
                       </h4>
-                      <div className="text-xs text-gray-400 mt-1">
-                        <span className="inline-block px-2 py-1 bg-blue-600 rounded text-white mr-2">
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <span className={`inline-block px-2 py-1 rounded text-white font-medium ${
+                          relatedArticle.category === 'newsroom' ? 'bg-blue-700' : 'bg-blue-500'
+                        }`}>
                           {relatedArticle.category === 'newsroom' ? 'News' : 'Academy'}
                         </span>
                         <span suppressHydrationWarning={true}>
