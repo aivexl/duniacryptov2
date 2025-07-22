@@ -1,0 +1,1 @@
+// This is a stub declaration for importing CSS files in TypeScript 
