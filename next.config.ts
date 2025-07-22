@@ -8,6 +8,21 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Experimental settings to improve chunk loading
+  experimental: {
+    optimizePackageImports: ['react', 'next'],
+  },
+  // Increase timeout for chunk loading
+  webpack: (config, { dev, isServer }) => {
+    if (dev && !isServer) {
+      config.watchOptions = {
+        ...config.watchOptions,
+        poll: 1000,
+        aggregateTimeout: 300,
+      };
+    }
+    return config;
+  },
   /* config options here */
 };
 

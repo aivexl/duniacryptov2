@@ -1,82 +1,60 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 const PLACEHOLDER = '/Asset/duniacrypto.png';
-const GNEWS_API_KEY = '52e430bd78a0701d71d6cfa29d5f760b';
-const API_URL = `/api/gnews/v4/search?q=crypto&lang=en&max=30&token=${GNEWS_API_KEY}`;
 
-type NewsItem = {
+type SanityArticle = {
+  _id: string;
   title: string;
-  url: string;
-  image?: string;
+  slug: { current: string };
+  imageUrl?: string;
+  category?: string;
+  publishedAt?: string;
 };
 
-const DUMMY_NEWS: NewsItem[] = Array.from({ length: 5 }, (_, i) => ({
-  title: `Berita Crypto Dummy #${i + 1}`,
-  url: '#',
-  image: PLACEHOLDER,
-}));
+type NewsSliderProps = {
+  articles?: SanityArticle[];
+};
 
-const NewsSlider: React.FC = () => {
-  const [news, setNews] = useState<NewsItem[]>([]);
+const NewsSlider: React.FC<NewsSliderProps> = ({ articles = [] }) => {
   const [current, setCurrent] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const intervalRef = useRef<NodeJS.Timeout>();
 
-  useEffect(() => {
-    const fetchNews = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const res = await fetch(API_URL);
-        const json = await res.json();
-        if (json.articles && json.articles.length > 0) {
-          // Pastikan setiap artikel punya image, jika tidak pakai PLACEHOLDER
-          const articlesWithImage = json.articles.map((article: NewsItem) => ({
-            ...article,
-            image: article.image || PLACEHOLDER
-          }));
-          setNews(articlesWithImage);
-        } else {
-          setNews([]);
-          setError('No news available from GNews.');
-        }
-      } catch (e) {
-        setNews(DUMMY_NEWS);
-        setError('Failed to fetch news from GNews. Menampilkan dummy.');
-      }
-      setLoading(false);
-    };
-    fetchNews();
-    // Set interval fetch 24 jam
-    const interval = setInterval(() => fetchNews(), 86400000);
-    return () => clearInterval(interval);
-  }, []);
+  // Convert Sanity articles to slider format
+  const sliderArticles = articles.slice(0, 5).map((article) => ({
+    id: article._id,
+    title: article.title,
+    url: `/${article.category === 'newsroom' ? 'newsroom' : 'academy'}/${article.slug.current}`,
+    image: article.imageUrl || PLACEHOLDER,
+    category: article.category || 'academy'
+  }));
 
   useEffect(() => {
-    if (news.length === 0) return;
+    if (sliderArticles.length === 0) return;
     intervalRef.current = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % news.length);
+      setCurrent((prev) => (prev + 1) % sliderArticles.length);
     }, 4000);
     return () => clearInterval(intervalRef.current);
-  }, [news]);
+  }, [sliderArticles.length]);
 
   const handlePrev = () => {
-    setCurrent((prev) => (prev - 1 + news.length) % news.length);
+    setCurrent((prev) => (prev - 1 + sliderArticles.length) % sliderArticles.length);
   };
+  
   const handleNext = () => {
-    setCurrent((prev) => (prev + 1) % news.length);
+    setCurrent((prev) => (prev + 1) % sliderArticles.length);
   };
 
-  if (loading) {
-    return <div className="bg-duniacrypto-panel rounded-lg shadow p-4 text-center text-gray-400 animate-pulse">Loading news slider...</div>;
-  }
-  if (error && news.length > 0) {
-    // Tampilkan slider dengan dummy jika error tapi ada news
-    // (sudah di-handle di atas)
-  }
-  if (news.length === 0) {
-    return <div className="bg-duniacrypto-panel rounded-lg shadow p-4 text-center text-gray-400">No news available.</div>;
+  if (sliderArticles.length === 0) {
+    return (
+      <div className="bg-duniacrypto-panel rounded-lg shadow p-4 text-center text-gray-400" style={{height: '400px'}}>
+        <div className="flex items-center justify-center h-full">
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Belum ada artikel</h3>
+            <p className="text-sm">Artikel Academy dan News akan muncul di sini setelah ditambahkan melalui Sanity Studio.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -85,7 +63,7 @@ const NewsSlider: React.FC = () => {
         <button
           className="bg-duniacrypto-card rounded-full p-2 hover:bg-duniacrypto-green/20 focus:outline-none"
           onClick={handlePrev}
-          aria-label="Previous news"
+          aria-label="Previous article"
         >
           <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></svg>
         </button>
@@ -94,28 +72,35 @@ const NewsSlider: React.FC = () => {
         <button
           className="bg-duniacrypto-card rounded-full p-2 hover:bg-duniacrypto-green/20 focus:outline-none"
           onClick={handleNext}
-          aria-label="Next news"
+          aria-label="Next article"
         >
           <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
         </button>
       </div>
       <div className="w-full h-full flex transition-transform duration-700" style={{ transform: `translateX(-${current * 100}%)` }}>
-        {news.map((item, i) => (
+        {sliderArticles.map((item) => (
           <div
-            key={i}
+            key={item.id}
             className="flex-shrink-0 w-full h-full flex flex-col items-center justify-center relative"
             style={{ minWidth: '100%', maxWidth: '100%', height: '400px' }}
           >
-            <a href={item.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full group">
+            <a href={item.url} className="block w-full h-full group">
               <img
                 src={item.image}
-                alt="news"
+                alt={item.title}
                 className="w-full h-full object-cover rounded-t-lg bg-black/30 transition-transform group-hover:scale-105"
                 style={{margin: 0, padding: 0, width: '100%', height: '100%'}}
                 onError={(event: React.SyntheticEvent<HTMLImageElement, Event>) => {
                   event.currentTarget.src = PLACEHOLDER;
                 }}
               />
+              <div className="absolute top-4 left-4">
+                <span className={`inline-block px-3 py-1.5 rounded-full text-white font-bold text-sm tracking-wide shadow-lg ${
+                  item.category === 'newsroom' ? 'bg-blue-700' : 'bg-blue-500'
+                }`}>
+                  {item.category === 'newsroom' ? 'News' : 'Academy'}
+                </span>
+              </div>
               <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4 rounded-b-lg">
                 <div className="text-lg md:text-2xl font-bold text-white line-clamp-2 drop-shadow-lg mb-8">
                   {item.title}
@@ -127,7 +112,7 @@ const NewsSlider: React.FC = () => {
       </div>
       {/* Dots indicator */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-        {news.map((_, i) => (
+        {sliderArticles.map((_, i) => (
           <button
             key={i}
             className={`w-2 h-2 rounded-full ${i === current ? 'bg-duniacrypto-green' : 'bg-gray-600'}`}

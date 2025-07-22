@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useContext, useEffect, useState, type ReactNode } from 'react';
 import { COINS_URL, GLOBAL_URL } from './CoinGeckoUtils';
 import CoinGeckoContext from './CoinGeckoContextContext';

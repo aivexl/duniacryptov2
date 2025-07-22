@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from 'react';
 import { useCoinGecko } from './CoinGeckoContext';
 import StarBorder from './StarBorder';

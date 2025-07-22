@@ -10,6 +10,7 @@ export default async function handler(req, res) {
       headers: {
         'User-Agent': 'Mozilla/5.0',
         'Accept': 'application/json',
+        'X-CG-API-KEY': 'CG-jrJUt1cGARECPAnb9TUeCdqE',
       },
     });
     const contentType = response.headers.get('content-type');

@@ -1,4 +1,6 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 
 const recapItems = [
   'Arus masuk Bitcoin ETF mencapai rekor tertinggi baru.',
