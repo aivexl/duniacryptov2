@@ -1,16 +1,13 @@
 import React, { useContext, useEffect, useState, type ReactNode } from 'react';
-import type { CoinAPI, Global, Coin } from './CoinGeckoUtils';
 import { COINS_URL, GLOBAL_URL } from './CoinGeckoUtils';
-import CoinGeckoContext from './CoinGeckoContextContext'; // Context di file terpisah
+import CoinGeckoContext from './CoinGeckoContextContext';
 
-// Komponen provider CoinGecko
 export const CoinGeckoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [coins, setCoins] = useState<Coin[] | null>(null);
-  const [global, setGlobal] = useState<Global | null>(null);
+  const [coins, setCoins] = useState<any[] | null>(null);
+  const [global, setGlobal] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data CoinGecko
   const fetchAll = async () => {
     setLoading(true);
     setError(null);
@@ -22,18 +19,7 @@ export const CoinGeckoProvider: React.FC<{ children: ReactNode }> = ({ children 
       if (!coinsRes.ok || !globalRes.ok) throw new Error('Failed to fetch CoinGecko data. Please try again later.');
       const coinsData = await coinsRes.json();
       const globalData = await globalRes.json();
-      const transformedCoins = coinsData.map((coin: CoinAPI, index: number) => ({
-        id: coin.id,
-        symbol: coin.symbol,
-        name: coin.name,
-        image: `https://assets.coincap.io/assets/icons/${coin.symbol.toLowerCase()}@2x.png`,
-        current_price: parseFloat(String(coin.current_price)),
-        market_cap: parseFloat(String(coin.market_cap)),
-        market_cap_rank: index + 1,
-        price_change_percentage_24h: parseFloat(String(coin.price_change_percentage_24h)),
-        total_volume: parseFloat(String(coin.total_volume)),
-      }));
-      setCoins(transformedCoins);
+      setCoins(coinsData);
       setGlobal(globalData.data);
     } catch {
       setError('Failed to fetch CoinGecko data. Please try again later.');
@@ -55,7 +41,6 @@ export const CoinGeckoProvider: React.FC<{ children: ReactNode }> = ({ children 
   );
 };
 
-// Hook untuk akses context
 export function useCoinGecko() {
   const ctx = useContext(CoinGeckoContext);
   if (!ctx) throw new Error('useCoinGecko must be used within a CoinGeckoProvider');
