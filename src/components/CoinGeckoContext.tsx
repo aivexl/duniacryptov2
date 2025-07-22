@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { CoinAPI, Global, Coin, CoinGeckoContextType } from './CoinGeckoTypes';
-import { COINS_URL, GLOBAL_URL } from './CoinGeckoTypes';
+// Import semua type dan constant dari CoinGeckoUtils agar file ini hanya berisi komponen
+import type { CoinAPI, Global, Coin, CoinGeckoContextType } from './CoinGeckoUtils';
+import { COINS_URL, GLOBAL_URL } from './CoinGeckoUtils';
 
+// Context CoinGecko
 const CoinGeckoContext = createContext<CoinGeckoContextType | undefined>(undefined);
 
 export const CoinGeckoProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -10,6 +12,7 @@ export const CoinGeckoProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch data CoinGecko
   const fetchAll = async () => {
     setLoading(true);
     setError(null);
