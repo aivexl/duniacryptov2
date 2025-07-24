@@ -12,12 +12,14 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   experimental: {
     optimizePackageImports: ['react', 'next', 'dayjs'],
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
+  },
+  
+  // Turbopack configuration (moved from experimental)
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
   },
@@ -58,9 +60,6 @@ const nextConfig: NextConfig = {
     
     return config;
   },
-  
-  // Enable SWC minification for faster builds
-  swcMinify: true,
   
   // Reduce bundle size
   output: 'standalone',

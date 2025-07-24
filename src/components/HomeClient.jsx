@@ -4,6 +4,7 @@ import React from "react";
 import CryptoTicker from "./CryptoTicker";
 import CryptoTable from "./CryptoTable";
 import MarketOverview from "./MarketOverview";
+import SubscribeContainer from "./SubscribeContainer";
 import DailyRecap from "./DailyRecap";
 import Mindshare from "./Mindshare";
 import NewsSlider from "./NewsSlider";
@@ -24,6 +25,7 @@ export default function HomeClient({ articles = [] }) {
         </section>
         <aside className="col-span-1 space-y-4 md:gap-6">
           <MarketOverview />
+          <SubscribeContainer />
           <CryptoTable />
           <Mindshare />
         </aside>

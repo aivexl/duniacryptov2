@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useCoinGecko } from './CoinGeckoContext';
-import StarBorder from './StarBorder';
 
 function formatNumber(num) {
   if (!num && num !== 0) return '-';
@@ -61,24 +60,6 @@ export default function MarketOverview() {
           </div>
         </div>
       </div>
-      {/* Subscribe Section terpisah */}
-      <StarBorder as="div" color="cyan" speed="8s" thickness={1} className="relative bg-duniacrypto-panel rounded-lg shadow p-4 flex flex-col items-center gap-3 w-full max-w-full mt-0 mb-8">
-        <h3 className="text-base font-bold mb-3 text-white">Subscribe for Crypto Updates</h3>
-        <form className="w-full flex flex-col sm:flex-row gap-2 items-center justify-center mt-2">
-          <input
-            type="email"
-            required
-            placeholder="Enter your email"
-            className="w-full sm:w-auto flex-1 px-3 py-2 rounded bg-gray-900 text-white border border-gray-700 focus:outline-none focus:border-duniacrypto-green text-sm"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 rounded bg-duniacrypto-green text-black font-bold hover:bg-green-400 transition text-sm"
-          >
-            Subscribe
-          </button>
-        </form>
-      </StarBorder>
     </>
   );
 } 

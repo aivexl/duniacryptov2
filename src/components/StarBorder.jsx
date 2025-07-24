@@ -13,7 +13,7 @@ const StarBorder = ({
     <Component 
       className={`star-border-container ${className}`} 
       style={{
-        padding: `${thickness}px 0`,
+        padding: `${thickness}px`,
         ...rest.style
       }}
       {...rest}

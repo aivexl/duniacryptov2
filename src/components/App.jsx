@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import CryptoTicker from './CryptoTicker';
 import CryptoTable from './CryptoTable';
 import MarketOverview from './MarketOverview';
+import SubscribeContainer from './SubscribeContainer';
 import NewsFeed from './NewsFeed';
 import DailyRecap from './DailyRecap';
 import Mindshare from './Mindshare';
@@ -106,6 +107,7 @@ export default function App() {
           </section>
           <aside className="col-span-1 space-y-4 md:space-y-6">
             <MarketOverview />
+            <SubscribeContainer />
             <CryptoTable />
             <Mindshare />
           </aside>

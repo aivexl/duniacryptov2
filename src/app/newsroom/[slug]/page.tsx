@@ -2,8 +2,13 @@ import { getArticleBySlug, addImageUrls, getAllArticles } from '../../../utils/s
 import { notFound } from 'next/navigation';
 import ArticleDetailClient from '../../../components/ArticleDetailClient';
 
-export default async function NewsroomDetailPage({ params }: { params: { slug: string } }) {
-  const article = await getArticleBySlug(params.slug);
+export default async function NewsroomDetailPage({ 
+  params 
+}: { 
+  params: Promise<{ slug: string }> 
+}) {
+  const { slug } = await params;
+  const article = await getArticleBySlug(slug);
   if (!article) return notFound();
   
   const [articleWithImage] = addImageUrls([article]);
