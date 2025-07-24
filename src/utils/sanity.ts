@@ -30,6 +30,10 @@ export interface SanityArticle {
   source: string
   publishedAt: string
   featured: boolean
+  // Academy specific fields
+  level?: string[] // ['newbie', 'intermediate', 'expert']
+  topics?: string[] // ['DeFi', 'NFT', 'Wallet', etc.]
+  networks?: string[] // ['Bitcoin Network', 'Ethereum Network', etc.]
 }
 
 export interface SanityArticleWithImage extends SanityArticle {
@@ -49,7 +53,10 @@ export async function getAllArticles(): Promise<SanityArticle[]> {
       category,
       source,
       publishedAt,
-      featured
+      featured,
+      level,
+      topics,
+      networks
     }
   `
   return client.fetch(query)
@@ -68,7 +75,10 @@ export async function getArticlesByCategory(category: 'newsroom' | 'academy'): P
       category,
       source,
       publishedAt,
-      featured
+      featured,
+      level,
+      topics,
+      networks
     }
   `
   return client.fetch(query, { category })
@@ -87,7 +97,10 @@ export async function getArticleBySlug(slug: string): Promise<SanityArticle | nu
       category,
       source,
       publishedAt,
-      featured
+      featured,
+      level,
+      topics,
+      networks
     }
   `
   return client.fetch(query, { slug })
@@ -106,7 +119,10 @@ export async function getFeaturedArticles(): Promise<SanityArticle[]> {
       category,
       source,
       publishedAt,
-      featured
+      featured,
+      level,
+      topics,
+      networks
     }
   `
   return client.fetch(query)
