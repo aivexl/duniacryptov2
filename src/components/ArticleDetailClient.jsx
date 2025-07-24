@@ -1,26 +1,32 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/id';
-import SubscribeContainer from './SubscribeContainer';
 import { CoinGeckoProvider } from './CoinGeckoContext';
+import SubscribeContainer from './SubscribeContainer';
 
 // Configure dayjs
 dayjs.extend(relativeTime);
 dayjs.locale('id');
 
 export default function ArticleDetailClient({ article, relatedArticles = [] }) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <CoinGeckoProvider>
+      {/* Main Layout - Same as homepage */}
       <main className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-4 md:py-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 flex-1 w-full">
-        {/* Main Content */}
         <section className="col-span-1 xl:col-span-2 space-y-4 md:space-y-6">
           {/* Article Header */}
           <div className="bg-duniacrypto-panel rounded-lg shadow overflow-hidden">
-            {/* Featured Image */}
-            <div className="relative h-48 sm:h-56 md:h-64 lg:h-72 xl:h-80">
+            {/* Featured Image - Same height as slider (400px) */}
+            <div className="relative h-96 md:h-[400px]">
               <img
                 src={article.imageUrl || '/Asset/duniacrypto.png'}
                 alt={article.title}
@@ -31,7 +37,7 @@ export default function ArticleDetailClient({ article, relatedArticles = [] }) {
               />
               {/* Category Badge */}
               <div className="absolute top-4 left-4">
-                <span className={`inline-block px-3 py-1 rounded-full text-white font-bold text-sm tracking-wide ${
+                <span className={`inline-block px-3 py-1.5 rounded-full text-white font-bold text-sm tracking-wide shadow-lg ${
                   article.category === 'newsroom' ? 'bg-blue-700' : 'bg-blue-500'
                 }`}>
                   {article.category === 'newsroom' ? 'News' : 'Academy'}
@@ -39,7 +45,7 @@ export default function ArticleDetailClient({ article, relatedArticles = [] }) {
               </div>
               {/* Title Overlay */}
               <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-4 md:p-6">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white line-clamp-2 drop-shadow-lg mb-2 md:mb-4">
+                <h1 className="text-lg md:text-2xl font-bold text-white line-clamp-2 drop-shadow-lg mb-8">
                   {article.title}
                 </h1>
                 <div className="text-xs sm:text-sm text-gray-200 flex gap-2 items-center">
@@ -95,8 +101,8 @@ export default function ArticleDetailClient({ article, relatedArticles = [] }) {
                           }`}>
                             {relatedArticle.category === 'newsroom' ? 'News' : 'Academy'}
                           </span>
-                          <span suppressHydrationWarning={true}>
-                            {dayjs(relatedArticle.publishedAt).fromNow()}
+                          <span>
+                            {isClient ? dayjs(relatedArticle.publishedAt).fromNow() : 'Loading...'}
                           </span>
                         </div>
                       </div>
@@ -108,10 +114,13 @@ export default function ArticleDetailClient({ article, relatedArticles = [] }) {
           )}
         </section>
 
-        {/* Sidebar */}
+        {/* Sidebar - Same as homepage */}
         <aside className="col-span-1 space-y-4 md:gap-6">
           {/* Subscribe for Crypto Updates - Same as homepage */}
-          <SubscribeContainer />
+          <SubscribeContainer 
+            containerClassName="w-full max-w-full mt-0 mb-8"
+            className=""
+          />
         </aside>
       </main>
     </CoinGeckoProvider>

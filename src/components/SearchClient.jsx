@@ -17,8 +17,13 @@ export default function SearchClient({ query: initialQuery = '' }) {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [displayCount, setDisplayCount] = useState(9);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const query = searchParams.get('q') || '';
@@ -187,8 +192,8 @@ export default function SearchClient({ query: initialQuery = '' }) {
                     
                     <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-gray-800">
                       <span className="font-medium">{article.source || 'Dunia Crypto'}</span>
-                      <span suppressHydrationWarning={true}>
-                        {dayjs(article.publishedAt).fromNow()}
+                      <span>
+                        {isClient ? dayjs(article.publishedAt).fromNow() : 'Loading...'}
                       </span>
                     </div>
                   </div>

@@ -17,7 +17,7 @@ export function urlFor(source: { asset: { _ref: string } }) {
 export interface SanityArticle {
   _id: string
   title: string
-  slug: string
+  slug: { current: string } // Fix: slug is an object with current property
   excerpt?: string
   content: string
   image?: {

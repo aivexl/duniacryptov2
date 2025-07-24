@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/id';
@@ -13,6 +13,11 @@ const PLACEHOLDER = '/Asset/duniacrypto.png';
 
 const NewsFeedServer = React.memo(({ articles = [], noTitle = false, initialCount = 10 }) => {
   const [displayCount, setDisplayCount] = useState(initialCount);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Sort articles by publishedAt (newest first) and combine News and Academy
   const sortedArticles = useMemo(() => {
@@ -73,8 +78,8 @@ const NewsFeedServer = React.memo(({ articles = [], noTitle = false, initialCoun
                   }`}>
                     {article.category === 'newsroom' ? 'News' : 'Academy'}
                   </span>
-                  <span suppressHydrationWarning={true}>
-                    {dayjs(article.publishedAt).fromNow()}
+                  <span>
+                    {isClient ? dayjs(article.publishedAt).fromNow() : 'Loading...'}
                   </span>
                 </div>
               </div>
