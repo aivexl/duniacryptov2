@@ -15,6 +15,17 @@ function urlFor(source: { asset: { _ref: string } }) {
   return builder.image(source);
 }
 
+interface SanityArticle {
+  _id: string;
+  title: string;
+  excerpt?: string;
+  slug: { current: string };
+  image?: { asset: { _ref: string } };
+  publishedAt: string;
+  source: string;
+  category: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -50,7 +61,7 @@ export async function GET(request: NextRequest) {
         _id,
         title,
         excerpt,
-        "slug": slug.current,
+        slug,
         image,
         publishedAt,
         source,
@@ -61,7 +72,7 @@ export async function GET(request: NextRequest) {
     const results = await client.fetch(groqQuery);
 
     // Add image URLs to results
-    const resultsWithImages = results.map((article: any) => {
+    const resultsWithImages = results.map((article: SanityArticle) => {
       try {
         if (article.image && article.image.asset && article.image.asset._ref) {
           const imageUrl = urlFor(article.image).url();

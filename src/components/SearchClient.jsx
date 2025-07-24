@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/id';
@@ -28,28 +29,27 @@ export default function SearchClient({ query: initialQuery = '' }) {
   }, [searchParams]);
 
   const performSearch = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      setHasSearched(false);
-      setDisplayCount(9);
-      return;
-    }
-
+    if (!query.trim()) return;
+    
     setIsLoading(true);
     setHasSearched(true);
     setDisplayCount(9); // Reset display count for new search
-
+    
     try {
-      // Search in both newsroom and academy articles
-      const [newsroomResults, academyResults] = await Promise.all([
-        fetch(`/api/search?q=${encodeURIComponent(query)}&category=newsroom`).then(res => res.json()),
-        fetch(`/api/search?q=${encodeURIComponent(query)}&category=academy`).then(res => res.json())
+      // Search both categories
+      const [newsroomResponse, academyResponse] = await Promise.all([
+        fetch(`/api/search?q=${encodeURIComponent(query)}&category=newsroom`),
+        fetch(`/api/search?q=${encodeURIComponent(query)}&category=academy`)
       ]);
 
-      const combinedResults = [
-        ...newsroomResults.map(article => ({ ...article, category: 'newsroom' })),
-        ...academyResults.map(article => ({ ...article, category: 'academy' }))
-      ];
+      const [newsroomResults, academyResults] = await Promise.all([
+        newsroomResponse.json(),
+        academyResponse.json()
+      ]);
+
+      // Combine and sort results by publishedAt
+      const combinedResults = [...newsroomResults, ...academyResults]
+        .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
       setSearchResults(combinedResults);
     } catch (error) {
@@ -147,7 +147,7 @@ export default function SearchClient({ query: initialQuery = '' }) {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
               {displayedArticles.map((article) => (
-                <a
+                <Link
                   key={article._id}
                   href={`/${article.category === 'newsroom' ? 'newsroom' : 'academy'}/${article.slug.current}`}
                   className="block bg-duniacrypto-panel rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group border border-gray-800 cursor-pointer transform hover:scale-105 no-underline hover:no-underline focus:no-underline active:no-underline"
@@ -192,7 +192,7 @@ export default function SearchClient({ query: initialQuery = '' }) {
                       </span>
                     </div>
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
             
@@ -217,18 +217,18 @@ export default function SearchClient({ query: initialQuery = '' }) {
               Try searching with different keywords or browse our categories
             </p>
             <div className="mt-6 space-x-4">
-              <a
+              <Link
                 href="/newsroom"
                 className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Browse News
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/academy"
                 className="inline-block px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
               >
                 Browse Academy
-              </a>
+              </Link>
             </div>
           </div>
         )}
