@@ -320,21 +320,21 @@ export default function AcademyClient({ articles = [] }) {
                       {/* Article Tags */}
                       {(article.level || article.topics || article.networks) && (
                         <div className="mt-3 flex flex-wrap gap-1">
-                          {article.level?.map((level) => (
-                            <span key={level} className="px-2 py-1 bg-green-600 text-white text-xs rounded">
-                              {level}
+                          {article.level && (
+                            <span className="px-2 py-1 bg-green-600 text-white text-xs rounded">
+                              {article.level}
                             </span>
-                          ))}
-                          {article.topics?.slice(0, 2).map((topic) => (
-                            <span key={topic} className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
-                              {topic}
+                          )}
+                          {article.topics && (
+                            <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                              {article.topics}
                             </span>
-                          ))}
-                          {article.networks?.slice(0, 1).map((network) => (
-                            <span key={network} className="px-2 py-1 bg-purple-600 text-white text-xs rounded">
-                              {network}
+                          )}
+                          {article.networks && (
+                            <span className="px-2 py-1 bg-purple-600 text-white text-xs rounded">
+                              {article.networks}
                             </span>
-                          ))}
+                          )}
                         </div>
                       )}
                     </div>
