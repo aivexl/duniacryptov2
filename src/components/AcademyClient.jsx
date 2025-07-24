@@ -171,14 +171,16 @@ export default function AcademyClient({ articles = [] }) {
             <button
               key={level.id}
               onClick={() => handleLevelClick(level.id)}
-              className={`p-0 rounded-lg border-2 border-blue-500 transition-all duration-200 text-left group ${
+              className={`p-0 rounded-lg border-2 border-blue-500 transition-all duration-200 text-left group relative overflow-hidden ${
                 activeLevel === level.id
                   ? `${level.color} text-white shadow-lg transform scale-105`
-                  : 'bg-duniacrypto-panel text-gray-300 hover:bg-gray-800'
+                  : 'bg-duniacrypto-panel text-gray-300'
               }`}
               tabIndex={0}
             >
-              <div className="w-full">
+              {/* Hover overlay biru tipis */}
+              <span className={`pointer-events-none absolute inset-0 rounded-lg bg-blue-500/10 transition-opacity duration-200 z-10 ${activeLevel === level.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}></span>
+              <div className="w-full relative z-20">
                 <div className="relative w-full h-40 md:h-48 rounded-t-lg overflow-hidden bg-duniacrypto-panel">
                   <img
                     src={level.image}

@@ -30,6 +30,7 @@ export interface SanityArticle {
   source: string
   publishedAt: string
   featured: boolean
+  showInSlider: boolean
   // Academy specific fields
   level?: string[] // ['newbie', 'intermediate', 'expert']
   topics?: string[] // ['DeFi', 'NFT', 'Wallet', etc.]
@@ -54,6 +55,7 @@ export async function getAllArticles(): Promise<SanityArticle[]> {
       source,
       publishedAt,
       featured,
+      showInSlider,
       level,
       topics,
       networks
@@ -76,6 +78,7 @@ export async function getArticlesByCategory(category: 'newsroom' | 'academy'): P
       source,
       publishedAt,
       featured,
+      showInSlider,
       level,
       topics,
       networks
@@ -98,6 +101,7 @@ export async function getArticleBySlug(slug: string): Promise<SanityArticle | nu
       source,
       publishedAt,
       featured,
+      showInSlider,
       level,
       topics,
       networks
@@ -120,6 +124,7 @@ export async function getFeaturedArticles(): Promise<SanityArticle[]> {
       source,
       publishedAt,
       featured,
+      showInSlider,
       level,
       topics,
       networks

@@ -65,6 +65,48 @@ export const articleType = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'level',
+      type: 'string',
+      title: 'Level Pembelajaran (Section 1)',
+      options: {
+        list: [
+          { title: 'Newbie', value: 'newbie' },
+          { title: 'Intermediate', value: 'intermediate' },
+          { title: 'Expert', value: 'expert' },
+        ],
+      },
+      hidden: ({ parent }) => (parent?.category as string) !== 'academy',
+      validation: (Rule) => Rule.custom(() => true),
+    }),
+    defineField({
+      name: 'topics',
+      type: 'string',
+      title: 'Topik Crypto (Section 2)',
+      options: {
+        list: [
+          'DeFi', 'NFT', 'Wallet', 'Blockchain', 'Trading', 'Airdrop',
+          'Security', 'Tokenomics', 'Stablecoin', 'GameFi', 'Web3',
+          'DAO', 'Mining', 'Metaverse'
+        ],
+      },
+      hidden: ({ parent }) => (parent?.category as string) !== 'academy',
+      validation: (Rule) => Rule.custom(() => true),
+    }),
+    defineField({
+      name: 'networks',
+      type: 'string',
+      title: 'Jaringan Blockchain (Section 3)',
+      options: {
+        list: [
+          'Bitcoin Network', 'Ethereum Network', 'Binance Smart Chain (BSC)',
+          'Solana Network', 'Polygon Network', 'Avalanche Network',
+          'Arbitrum Network', 'Cardano Network'
+        ],
+      },
+      hidden: ({ parent }) => (parent?.category as string) !== 'academy',
+      validation: (Rule) => Rule.custom(() => true),
+    }),
+    defineField({
       name: 'source',
       type: 'string',
       title: 'Source',
@@ -82,6 +124,13 @@ export const articleType = defineType({
       type: 'boolean',
       title: 'Featured Article',
       description: 'Show this article on the home page',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'showInSlider',
+      type: 'boolean',
+      title: 'Tampilkan di Slider?',
+      description: 'Aktifkan jika ingin artikel ini tampil di slider homepage',
       initialValue: false,
     }),
   ],
