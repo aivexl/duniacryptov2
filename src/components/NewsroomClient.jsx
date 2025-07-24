@@ -83,11 +83,16 @@ export default function NewsroomClient({ articles = [] }) {
       {/* Main Layout - Fixed width 1232px and proportional */}
       <main className="w-[1232px] mx-auto px-6 py-4 md:py-6">
         {/* Header - Proportional width */}
-        <div className="bg-duniacrypto-panel rounded-lg shadow p-6 mb-8">
-          <h1 className="text-4xl font-bold text-white mb-3">Newsroom</h1>
-          <p className="text-gray-300 text-lg">
-            Berita terbaru seputar cryptocurrency dan blockchain
-          </p>
+        <div className="relative mb-12">
+          {/* Background Full Width */}
+          <div className="absolute inset-x-0 top-0 bottom-0 bg-gradient-to-r from-cyan-900/20 via-blue-900/20 to-purple-900/20 rounded-xl border border-cyan-500/30 backdrop-blur-sm"></div>
+          {/* Content */}
+          <div className="relative text-center py-12 px-6">
+            <h1 className="text-4xl font-bold text-white mb-3">Newsroom</h1>
+            <p className="text-xl md:text-2xl text-gray-300">
+              Berita terbaru seputar cryptocurrency dan blockchain
+            </p>
+          </div>
         </div>
         
         {/* Articles List - Proportional horizontal layout */}
@@ -103,7 +108,7 @@ export default function NewsroomClient({ articles = [] }) {
                   {/* Article Content - Proportional horizontal layout */}
                   <div className="flex flex-row">
                     {/* Article Image - Proportional width (25% of container) */}
-                    <div className="relative w-[308px] h-32 overflow-hidden flex-shrink-0">
+                    <div className="relative aspect-[4/3] w-48 md:w-60 lg:w-72 max-w-xs h-auto overflow-hidden flex-shrink-0">
                       <img
                         src={article.imageUrl || '/Asset/duniacrypto.png'}
                         alt={article.image?.alt || article.title}
