@@ -959,6 +959,7 @@ function MarketOverviewRedesigned() {
         }
         const data = await response.json();
         console.log('Market data received:', data); // Debug log
+        console.log('Market cap percentage structure:', data.data?.market_cap_percentage); // Debug log
         setMarketData(data.data);
       } catch (error) {
         console.error('Error fetching market data:', error);
@@ -1047,15 +1048,21 @@ function MarketOverviewRedesigned() {
         <div className="text-xs sm:text-sm md:text-base font-bold text-white mb-0.5 md:mb-1 leading-tight">
           {(() => {
             const btcPercentage = marketData.market_cap_percentage?.btc;
-            console.log('BTC percentage:', btcPercentage); // Debug log
-            return btcPercentage !== undefined && btcPercentage !== null ? btcPercentage.toFixed(1) : '48.5';
+            console.log('BTC percentage:', btcPercentage, 'Type:', typeof btcPercentage); // Debug log
+            if (btcPercentage !== undefined && btcPercentage !== null && !isNaN(btcPercentage)) {
+              return btcPercentage.toFixed(1);
+            }
+            return '48.5';
           })()}% BTC
         </div>
         <div className="text-xs text-gray-400 leading-tight">
           {(() => {
             const ethPercentage = marketData.market_cap_percentage?.eth;
-            console.log('ETH percentage:', ethPercentage); // Debug log
-            return ethPercentage !== undefined && ethPercentage !== null ? ethPercentage.toFixed(1) : '18.2';
+            console.log('ETH percentage:', ethPercentage, 'Type:', typeof ethPercentage); // Debug log
+            if (ethPercentage !== undefined && ethPercentage !== null && !isNaN(ethPercentage)) {
+              return ethPercentage.toFixed(1);
+            }
+            return '18.2';
           })()}% ETH
         </div>
       </div>
