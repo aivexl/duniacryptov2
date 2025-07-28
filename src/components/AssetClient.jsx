@@ -93,6 +93,9 @@ export default function AssetClient() {
   const fetchDetailedCoinData = async (coinId) => {
     setLoadingDetail(true);
     try {
+      // Add delay to prevent rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       // Try to get detailed coin data first (includes supply info) - simplified parameters
       let coinDetailResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`);
       
@@ -100,6 +103,15 @@ export default function AssetClient() {
       if (coinDetailResponse.ok) {
         detailedCoinInfo = await coinDetailResponse.json();
         console.log('Detailed coin info for', coinId, ':', detailedCoinInfo);
+      } else if (coinDetailResponse.status === 429) {
+        // Rate limited - wait and retry once
+        console.log('Rate limited, waiting 2 seconds before retry...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        coinDetailResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}?localization=false&market_data=true`);
+        if (coinDetailResponse.ok) {
+          detailedCoinInfo = await coinDetailResponse.json();
+          console.log('Detailed coin info for', coinId, ' (retry):', detailedCoinInfo);
+        }
       } else {
         // Fallback: try with even fewer parameters
         coinDetailResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}?localization=false&market_data=true`);
@@ -110,7 +122,14 @@ export default function AssetClient() {
       }
       
       // Use daily market chart endpoint for performance data
-      const chartResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30&interval=daily`);
+      let chartResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30&interval=daily`);
+      
+      if (chartResponse.status === 429) {
+        // Rate limited - wait and retry once
+        console.log('Chart rate limited, waiting 2 seconds before retry...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        chartResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30&interval=daily`);
+      }
       
       let performanceData = {
         price_change_percentage_1h_in_currency: 0,
