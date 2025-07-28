@@ -1044,8 +1044,8 @@ function MarketOverviewRedesigned() {
 function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) {
   const [coins, setCoins] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortColumn, setSortColumn] = useState('market_cap'); // Default sort by market cap
-  const [sortDirection, setSortDirection] = useState('desc'); // Default descending
+  const [sortColumn, setSortColumn] = useState(null); // No default sorting, let filter system handle it
+  const [sortDirection, setSortDirection] = useState('desc'); // Default descending when sorting is activated
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -1362,7 +1362,7 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
     }
 
     // Apply date range sorting (no filtering, just sorting by the selected time period)
-    if (dateRange && !sortColumn) {
+    if (dateRange) {
       switch (dateRange) {
         case '1h':
           filteredCoins.sort((a, b) => 
@@ -1394,8 +1394,9 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
       }
     }
 
-    // Apply column sorting
+    // Apply column sorting (only if user explicitly clicks on column headers)
     if (sortColumn && sortDirection) {
+      // Override the date range sorting with column sorting
       filteredCoins.sort((a, b) => {
         let aValue, bValue;
         
