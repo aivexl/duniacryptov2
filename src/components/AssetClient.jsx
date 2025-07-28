@@ -802,7 +802,7 @@ export default function AssetClient() {
                   </div>
                 </div>
                 <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                  ${formatPrice(detailedCoinData?.market_data?.current_price?.usd || selectedCoin.current_price)}
+                  {formatPrice(detailedCoinData?.market_data?.current_price?.usd || selectedCoin.current_price)}
                 </div>
                 <div className="text-sm text-gray-400">
                   Market Cap: {formatMarketCap(detailedCoinData?.market_data?.market_cap?.usd || selectedCoin.market_cap)} • Volume: {formatMarketCap(detailedCoinData?.market_data?.total_volume?.usd || selectedCoin.total_volume)}
@@ -813,11 +813,11 @@ export default function AssetClient() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
                 <div className="bg-gray-800 rounded-lg p-3">
                   <div className="text-sm text-gray-400 mb-1">24h High</div>
-                  <div className="text-white font-semibold">${formatPrice(detailedCoinData?.market_data?.high_24h?.usd || selectedCoin.high_24h)}</div>
+                  <div className="text-white font-semibold">{formatPrice(detailedCoinData?.market_data?.high_24h?.usd || selectedCoin.high_24h)}</div>
                 </div>
                 <div className="bg-gray-800 rounded-lg p-3">
                   <div className="text-sm text-gray-400 mb-1">24h Low</div>
-                  <div className="text-white font-semibold">${formatPrice(detailedCoinData?.market_data?.low_24h?.usd || selectedCoin.low_24h)}</div>
+                  <div className="text-white font-semibold">{formatPrice(detailedCoinData?.market_data?.low_24h?.usd || selectedCoin.low_24h)}</div>
                 </div>
                 <div className="bg-gray-800 rounded-lg p-3">
                   <div className="text-sm text-gray-400 mb-1">Circulating Supply</div>
@@ -843,7 +843,7 @@ export default function AssetClient() {
                 </div>
                 <div className="bg-gray-800 rounded-lg p-3">
                   <div className="text-sm text-gray-400 mb-1">ATH</div>
-                  <div className="text-white font-semibold">${formatPrice(detailedCoinData?.market_data?.ath?.usd || selectedCoin.ath)}</div>
+                  <div className="text-white font-semibold">{formatPrice(detailedCoinData?.market_data?.ath?.usd || selectedCoin.ath)}</div>
                 </div>
               </div>
 
@@ -891,7 +891,7 @@ export default function AssetClient() {
                   <p className="text-gray-300 text-sm leading-relaxed">
                     {selectedCoin.name} ({selectedCoin.symbol.toUpperCase()}) is a cryptocurrency currently ranked #{selectedCoin.market_cap_rank} by market capitalization. 
                     With a current market cap of {formatMarketCap(selectedCoin.market_cap)}, it represents a significant player in the digital asset ecosystem. 
-                    The coin has a circulating supply of {formatMarketCap(selectedCoin.circulating_supply)} tokens and has reached an all-time high of ${formatPrice(selectedCoin.ath)}.
+                    The coin has a circulating supply of {formatMarketCap(selectedCoin.circulating_supply)} tokens and has reached an all-time high of {formatPrice(selectedCoin.ath)}.
                   </p>
                 </div>
               </div>
