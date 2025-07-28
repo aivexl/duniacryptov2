@@ -1068,7 +1068,7 @@ function MarketOverviewRedesigned() {
 function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) {
   const [coins, setCoins] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortColumn, setSortColumn] = useState(null); // No default sorting, let filter system handle it
+  const [sortColumn, setSortColumn] = useState('market_cap'); // Default sorting by market cap
   const [sortDirection, setSortDirection] = useState('desc'); // Default descending when sorting is activated
 
   const handleSort = (column) => {
