@@ -1048,22 +1048,22 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
   useEffect(() => {
     const fetchCoins = async () => {
       try {
-        // Try with 100 coins first
-        let response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1');
+        // Try with 100 coins first - include price_change_percentage data
+        let response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&price_change_percentage=1h,24h,7d,30d,1y');
         
         if (!response.ok) {
           // If that fails, try with 50 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1');
+          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&price_change_percentage=1h,24h,7d,30d,1y');
         }
         
         if (!response.ok) {
           // If that fails, try with 25 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1');
+          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&price_change_percentage=1h,24h,7d,30d,1y');
         }
         
         if (!response.ok) {
           // Final fallback - try with 10 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&per_page=10');
+          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&per_page=10&price_change_percentage=1h,24h,7d,30d,1y');
         }
         
         if (!response.ok) {
@@ -1083,7 +1083,11 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
             current_price: 45000,
             market_cap: 850000000000,
             market_cap_rank: 1,
+            price_change_percentage_1h_in_currency: 0.5,
             price_change_percentage_24h: 2.5,
+            price_change_percentage_7d_in_currency: 8.2,
+            price_change_percentage_30d_in_currency: 15.3,
+            price_change_percentage_1y_in_currency: 45.7,
             circulating_supply: 19500000,
             total_supply: 21000000,
             max_supply: 21000000,
@@ -1096,7 +1100,11 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
             current_price: 3000,
             market_cap: 350000000000,
             market_cap_rank: 2,
+            price_change_percentage_1h_in_currency: 0.3,
             price_change_percentage_24h: 1.8,
+            price_change_percentage_7d_in_currency: 6.5,
+            price_change_percentage_30d_in_currency: 12.8,
+            price_change_percentage_1y_in_currency: 38.2,
             circulating_supply: 120000000,
             total_supply: 120000000,
             max_supply: null,
@@ -1589,22 +1597,22 @@ function CryptoHeatmap({ searchQuery, filter, dateRange, onCoinClick }) {
     const fetchCoins = async () => {
       try {
         console.log('Fetching coins for heatmap...');
-        // Try with 100 coins first
-        let response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1');
+        // Try with 100 coins first - include price_change_percentage data
+        let response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&price_change_percentage=1h,24h,7d,30d,1y');
         
         if (!response.ok) {
           // If that fails, try with 50 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1');
+          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&price_change_percentage=1h,24h,7d,30d,1y');
         }
         
         if (!response.ok) {
           // If that fails, try with 25 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1');
+          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&price_change_percentage=1h,24h,7d,30d,1y');
         }
         
         if (!response.ok) {
           // Final fallback - try with 10 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&per_page=10');
+          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&per_page=10&price_change_percentage=1h,24h,7d,30d,1y');
         }
         
         if (!response.ok) {
@@ -1625,7 +1633,11 @@ function CryptoHeatmap({ searchQuery, filter, dateRange, onCoinClick }) {
             current_price: 45000,
             market_cap: 850000000000,
             market_cap_rank: 1,
+            price_change_percentage_1h_in_currency: 0.5,
             price_change_percentage_24h: 2.5,
+            price_change_percentage_7d_in_currency: 8.2,
+            price_change_percentage_30d_in_currency: 15.3,
+            price_change_percentage_1y_in_currency: 45.7,
             circulating_supply: 19500000,
             total_supply: 21000000,
             max_supply: 21000000,
@@ -1638,7 +1650,11 @@ function CryptoHeatmap({ searchQuery, filter, dateRange, onCoinClick }) {
             current_price: 3000,
             market_cap: 350000000000,
             market_cap_rank: 2,
+            price_change_percentage_1h_in_currency: 0.3,
             price_change_percentage_24h: 1.8,
+            price_change_percentage_7d_in_currency: 6.5,
+            price_change_percentage_30d_in_currency: 12.8,
+            price_change_percentage_1y_in_currency: 38.2,
             circulating_supply: 120000000,
             total_supply: 120000000,
             max_supply: null,
