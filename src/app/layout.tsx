@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ErrorBoundary from "../components/ErrorBoundary";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,6 +61,7 @@ export default function RootLayout({
           </div>
           <Footer />
         </ErrorBoundary>
+        <Analytics />
       </body>
     </html>
   );
