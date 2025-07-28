@@ -1044,6 +1044,39 @@ function MarketOverviewRedesigned() {
 function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) {
   const [coins, setCoins] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sortColumn, setSortColumn] = useState('market_cap'); // Default sort by market cap
+  const [sortDirection, setSortDirection] = useState('desc'); // Default descending
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      // If clicking the same column, toggle direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // If clicking a new column, set it as active and default to desc
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
+
+  const getSortIcon = (column) => {
+    if (sortColumn !== column) {
+      return (
+        <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    
+    return sortDirection === 'asc' ? (
+      <svg className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    ) : (
+      <svg className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+  };
 
   useEffect(() => {
     const fetchCoins = async () => {
@@ -1117,7 +1150,7 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
     };
 
     fetchCoins();
-  }, [dateRange]);
+  }, [dateRange, sortColumn, sortDirection]);
 
   const getFilteredCoins = () => {
     let filteredCoins = coins || [];
@@ -1329,7 +1362,7 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
     }
 
     // Apply date range sorting (no filtering, just sorting by the selected time period)
-    if (dateRange) {
+    if (dateRange && !sortColumn) {
       switch (dateRange) {
         case '1h':
           filteredCoins.sort((a, b) => 
@@ -1359,6 +1392,51 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
           );
           break;
       }
+    }
+
+    // Apply column sorting
+    if (sortColumn && sortDirection) {
+      filteredCoins.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch (sortColumn) {
+          case 'rank':
+            aValue = a.market_cap_rank || 999;
+            bValue = b.market_cap_rank || 999;
+            break;
+          case 'name':
+            aValue = a.name.toLowerCase();
+            bValue = b.name.toLowerCase();
+            break;
+          case 'price':
+            aValue = a.current_price || 0;
+            bValue = b.current_price || 0;
+            break;
+          case 'percentage':
+            aValue = dateRange === '1h' ? a.price_change_percentage_1h_in_currency :
+                    dateRange === '7d' ? a.price_change_percentage_7d_in_currency :
+                    dateRange === '30d' ? a.price_change_percentage_30d_in_currency :
+                    dateRange === '1y' ? a.price_change_percentage_1y_in_currency :
+                    a.price_change_percentage_24h || 0;
+            bValue = dateRange === '1h' ? b.price_change_percentage_1h_in_currency :
+                    dateRange === '7d' ? b.price_change_percentage_7d_in_currency :
+                    dateRange === '30d' ? b.price_change_percentage_30d_in_currency :
+                    dateRange === '1y' ? b.price_change_percentage_1y_in_currency :
+                    b.price_change_percentage_24h || 0;
+            break;
+          case 'market_cap':
+          default:
+            aValue = a.market_cap || 0;
+            bValue = b.market_cap || 0;
+            break;
+        }
+        
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        } else {
+          return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+      });
     }
 
     return filteredCoins;
@@ -1392,16 +1470,56 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
       <table className="w-full text-xs sm:text-sm md:text-base">
         <thead>
           <tr className="border-b border-gray-700">
-            <th className="text-left py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">#</th>
-            <th className="text-left py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">Asset</th>
-            <th className="text-right py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">Price</th>
-            <th className="text-right py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">
-              {dateRange === '1h' ? '1h %' : 
-               dateRange === '7d' ? '7d %' : 
-               dateRange === '30d' ? '30d %' : 
-               dateRange === '1y' ? '1y %' : '24h %'}
+            <th 
+              className={`text-left py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-xs sm:text-sm cursor-pointer transition-colors hover:text-blue-400 ${sortColumn === 'rank' ? 'text-blue-400' : 'text-gray-300'}`}
+              onClick={() => handleSort('rank')}
+            >
+              <div className="flex items-center space-x-1">
+                <span>#</span>
+                {getSortIcon('rank')}
+              </div>
             </th>
-            <th className="text-right py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">Market Cap</th>
+            <th 
+              className={`text-left py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-xs sm:text-sm cursor-pointer transition-colors hover:text-blue-400 ${sortColumn === 'name' ? 'text-blue-400' : 'text-gray-300'}`}
+              onClick={() => handleSort('name')}
+            >
+              <div className="flex items-center space-x-1">
+                <span>Asset</span>
+                {getSortIcon('name')}
+              </div>
+            </th>
+            <th 
+              className={`text-right py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-xs sm:text-sm cursor-pointer transition-colors hover:text-blue-400 ${sortColumn === 'price' ? 'text-blue-400' : 'text-gray-300'}`}
+              onClick={() => handleSort('price')}
+            >
+              <div className="flex items-center justify-end space-x-1">
+                <span>Price</span>
+                {getSortIcon('price')}
+              </div>
+            </th>
+            <th 
+              className={`text-right py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-xs sm:text-sm cursor-pointer transition-colors hover:text-blue-400 ${sortColumn === 'percentage' ? 'text-blue-400' : 'text-gray-300'}`}
+              onClick={() => handleSort('percentage')}
+            >
+              <div className="flex items-center justify-end space-x-1">
+                <span>
+                  {dateRange === '1h' ? '1h %' : 
+                   dateRange === '7d' ? '7d %' : 
+                   dateRange === '30d' ? '30d %' : 
+                   dateRange === '1y' ? '1y %' : '24h %'}
+                </span>
+                {getSortIcon('percentage')}
+              </div>
+            </th>
+            <th 
+              className={`text-right py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-xs sm:text-sm cursor-pointer transition-colors hover:text-blue-400 ${sortColumn === 'market_cap' ? 'text-blue-400' : 'text-gray-300'}`}
+              onClick={() => handleSort('market_cap')}
+            >
+              <div className="flex items-center justify-end space-x-1">
+                <span>Market Cap</span>
+                {getSortIcon('market_cap')}
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody>
