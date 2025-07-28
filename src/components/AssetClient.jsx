@@ -954,10 +954,24 @@ function MarketOverviewRedesigned() {
     const fetchMarketData = async () => {
       try {
         const response = await fetch('/api/coingecko/api/v3/global');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         setMarketData(data.data);
       } catch (error) {
         console.error('Error fetching market data:', error);
+        // Provide fallback data
+        setMarketData({
+          total_market_cap: { usd: 2500000000000 },
+          total_volume: { usd: 80000000000 },
+          market_cap_change_percentage_24h_usd: 2.5,
+          active_cryptocurrencies: 2500,
+          market_cap_percentage: {
+            btc: 48.5,
+            eth: 18.2
+          }
+        });
       } finally {
         setLoading(false);
       }
@@ -1008,10 +1022,10 @@ function MarketOverviewRedesigned() {
       <div className="bg-duniacrypto-panel rounded-md sm:rounded-lg border border-gray-700 p-1.5 sm:p-2 md:p-4 flex flex-col justify-center min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] lg:min-h-[5rem]">
         <h3 className="text-xs font-semibold text-gray-300 mb-0.5 sm:mb-1 md:mb-1.5">Market Cap</h3>
         <div className="text-xs sm:text-sm md:text-base font-bold text-white mb-0.5 md:mb-1 leading-tight">
-          {formatNumber(marketData.total_market_cap.usd)}
+          {formatNumber(marketData.total_market_cap?.usd || 0)}
         </div>
         <div className="text-xs text-gray-400 leading-tight">
-          24h: {formatPercentage(marketData.market_cap_change_percentage_24h_usd)}
+          24h: {formatPercentage(marketData.market_cap_change_percentage_24h_usd || 0)}
         </div>
       </div>
 
@@ -1019,10 +1033,10 @@ function MarketOverviewRedesigned() {
       <div className="bg-duniacrypto-panel rounded-md sm:rounded-lg border border-gray-700 p-1.5 sm:p-2 md:p-4 flex flex-col justify-center min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] lg:min-h-[5rem]">
         <h3 className="text-xs font-semibold text-gray-300 mb-0.5 sm:mb-1 md:mb-1.5">Volume</h3>
         <div className="text-xs sm:text-sm md:text-base font-bold text-white mb-0.5 md:mb-1 leading-tight">
-          {formatNumber(marketData.total_volume.usd)}
+          {formatNumber(marketData.total_volume?.usd || 0)}
         </div>
         <div className="text-xs text-gray-400 leading-tight">
-          Active: {marketData.active_cryptocurrencies.toLocaleString()}
+          Active: {(marketData.active_cryptocurrencies || 0).toLocaleString()}
         </div>
       </div>
 
@@ -1030,10 +1044,10 @@ function MarketOverviewRedesigned() {
       <div className="bg-duniacrypto-panel rounded-md sm:rounded-lg border border-gray-700 p-1.5 sm:p-2 md:p-4 flex flex-col justify-center min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] lg:min-h-[5rem]">
         <h3 className="text-xs font-semibold text-gray-300 mb-0.5 sm:mb-1 md:mb-1.5">Dominance</h3>
         <div className="text-xs sm:text-sm md:text-base font-bold text-white mb-0.5 md:mb-1 leading-tight">
-          {marketData.market_cap_percentage.btc.toFixed(1)}% BTC
+          {(marketData.market_cap_percentage?.btc || 0).toFixed(1)}% BTC
         </div>
         <div className="text-xs text-gray-400 leading-tight">
-          {marketData.market_cap_percentage.eth.toFixed(1)}% ETH
+          {(marketData.market_cap_percentage?.eth || 0).toFixed(1)}% ETH
         </div>
       </div>
     </div>
@@ -1082,21 +1096,21 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
     const fetchCoins = async () => {
       try {
         // Try with 100 coins first - include price_change_percentage data
-        let response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&price_change_percentage=1h,24h,7d,30d,1y');
+        let response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&price_change_percentage=24h');
         
         if (!response.ok) {
           // If that fails, try with 50 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&price_change_percentage=1h,24h,7d,30d,1y');
+          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&price_change_percentage=24h');
         }
         
         if (!response.ok) {
           // If that fails, try with 25 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&price_change_percentage=1h,24h,7d,30d,1y');
+          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&price_change_percentage=24h');
         }
         
         if (!response.ok) {
           // Final fallback - try with 10 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&per_page=10&price_change_percentage=1h,24h,7d,30d,1y');
+          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&per_page=10&price_change_percentage=24h');
         }
         
         if (!response.ok) {
@@ -1150,7 +1164,7 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
     };
 
     fetchCoins();
-  }, [dateRange, sortColumn, sortDirection]);
+  }, [dateRange]);
 
   const getFilteredCoins = () => {
     let filteredCoins = coins || [];
