@@ -469,18 +469,20 @@ export default function AssetClient() {
               {viewMode === 'table' ? (
                 <CryptoTableWithSearch 
                   searchQuery={searchQuery} 
-                  filter={cryptoFilter} 
+                  filter={cryptoFilter}
+                  dateRange={dateRange}
                   onCoinClick={(coin) => {
                     setSelectedCoin(coin);
                     setShowCoinDetail(true);
                     fetchDetailedCoinData(coin.id);
                   }}
                 />
-              ) : (
-                                  <CryptoHeatmap 
-                    searchQuery={searchQuery} 
-                    filter={cryptoFilter} 
-                    onCoinClick={(coin) => {
+                            ) : (
+                <CryptoHeatmap 
+                  searchQuery={searchQuery} 
+                  filter={cryptoFilter}
+                  dateRange={dateRange}
+                  onCoinClick={(coin) => {
                       // Debounce rapid clicks to prevent API spam
                       if (lastClickedCoin === coin.id && clickTimeout) {
                         return; // Ignore rapid clicks on same coin
@@ -1039,7 +1041,7 @@ function MarketOverviewRedesigned() {
 }
 
 // Crypto Table with Search Component (Ultra Compact Mobile)
-function CryptoTableWithSearch({ searchQuery, filter, onCoinClick }) {
+function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) {
   const [coins, setCoins] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1107,7 +1109,7 @@ function CryptoTableWithSearch({ searchQuery, filter, onCoinClick }) {
     };
 
     fetchCoins();
-  }, []);
+  }, [dateRange]);
 
   const getFilteredCoins = () => {
     let filteredCoins = coins || [];
@@ -1278,6 +1280,51 @@ function CryptoTableWithSearch({ searchQuery, filter, onCoinClick }) {
       default:
         // Already sorted by market cap from API
         break;
+    }
+
+    // Apply date range filter
+    if (dateRange && dateRange !== '24h') {
+      switch (dateRange) {
+        case '1h':
+          // Filter by 1h performance - show coins with significant 1h movement
+          filteredCoins = filteredCoins.filter(coin => 
+            Math.abs(coin.price_change_percentage_1h_in_currency || 0) > 1
+          );
+          filteredCoins.sort((a, b) => 
+            Math.abs(b.price_change_percentage_1h_in_currency || 0) - Math.abs(a.price_change_percentage_1h_in_currency || 0)
+          );
+          break;
+        case '7d':
+          // Filter by 7d performance - show coins with significant 7d movement
+          filteredCoins = filteredCoins.filter(coin => 
+            Math.abs(coin.price_change_percentage_7d_in_currency || 0) > 5
+          );
+          filteredCoins.sort((a, b) => 
+            Math.abs(b.price_change_percentage_7d_in_currency || 0) - Math.abs(a.price_change_percentage_7d_in_currency || 0)
+          );
+          break;
+        case '30d':
+          // Filter by 30d performance - show coins with significant 30d movement
+          filteredCoins = filteredCoins.filter(coin => 
+            Math.abs(coin.price_change_percentage_30d_in_currency || 0) > 10
+          );
+          filteredCoins.sort((a, b) => 
+            Math.abs(b.price_change_percentage_30d_in_currency || 0) - Math.abs(a.price_change_percentage_30d_in_currency || 0)
+          );
+          break;
+        case '1y':
+          // Filter by 1y performance - show coins with significant 1y movement
+          filteredCoins = filteredCoins.filter(coin => 
+            Math.abs(coin.price_change_percentage_1y_in_currency || 0) > 20
+          );
+          filteredCoins.sort((a, b) => 
+            Math.abs(b.price_change_percentage_1y_in_currency || 0) - Math.abs(a.price_change_percentage_1y_in_currency || 0)
+          );
+          break;
+        default:
+          // For 24h, no additional filtering needed
+          break;
+      }
     }
 
     return filteredCoins;
@@ -1497,7 +1544,7 @@ function CryptoSectors() {
 }
 
 // Crypto Heatmap Component
-function CryptoHeatmap({ searchQuery, filter, onCoinClick }) {
+function CryptoHeatmap({ searchQuery, filter, dateRange, onCoinClick }) {
   const [coins, setCoins] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1567,7 +1614,7 @@ function CryptoHeatmap({ searchQuery, filter, onCoinClick }) {
     };
 
     fetchCoins();
-  }, []);
+  }, [dateRange]);
 
   const getFilteredCoins = () => {
     let filteredCoins = coins || [];
@@ -1739,6 +1786,51 @@ function CryptoHeatmap({ searchQuery, filter, onCoinClick }) {
         break;
       default:
         break;
+    }
+
+    // Apply date range filter
+    if (dateRange && dateRange !== '24h') {
+      switch (dateRange) {
+        case '1h':
+          // Filter by 1h performance - show coins with significant 1h movement
+          filteredCoins = filteredCoins.filter(coin => 
+            Math.abs(coin.price_change_percentage_1h_in_currency || 0) > 1
+          );
+          filteredCoins.sort((a, b) => 
+            Math.abs(b.price_change_percentage_1h_in_currency || 0) - Math.abs(a.price_change_percentage_1h_in_currency || 0)
+          );
+          break;
+        case '7d':
+          // Filter by 7d performance - show coins with significant 7d movement
+          filteredCoins = filteredCoins.filter(coin => 
+            Math.abs(coin.price_change_percentage_7d_in_currency || 0) > 5
+          );
+          filteredCoins.sort((a, b) => 
+            Math.abs(b.price_change_percentage_7d_in_currency || 0) - Math.abs(a.price_change_percentage_7d_in_currency || 0)
+          );
+          break;
+        case '30d':
+          // Filter by 30d performance - show coins with significant 30d movement
+          filteredCoins = filteredCoins.filter(coin => 
+            Math.abs(coin.price_change_percentage_30d_in_currency || 0) > 10
+          );
+          filteredCoins.sort((a, b) => 
+            Math.abs(b.price_change_percentage_30d_in_currency || 0) - Math.abs(a.price_change_percentage_30d_in_currency || 0)
+          );
+          break;
+        case '1y':
+          // Filter by 1y performance - show coins with significant 1y movement
+          filteredCoins = filteredCoins.filter(coin => 
+            Math.abs(coin.price_change_percentage_1y_in_currency || 0) > 20
+          );
+          filteredCoins.sort((a, b) => 
+            Math.abs(b.price_change_percentage_1y_in_currency || 0) - Math.abs(a.price_change_percentage_1y_in_currency || 0)
+          );
+          break;
+        default:
+          // For 24h, no additional filtering needed
+          break;
+      }
     }
 
     return filteredCoins;
