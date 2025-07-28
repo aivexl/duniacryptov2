@@ -449,7 +449,7 @@ export default function AssetClient() {
               </div>
             </div>
             
-            <div className={`bg-duniacrypto-panel border border-gray-700 ${viewMode === 'heatmap' ? 'p-1 sm:p-2' : ''}`}>
+            <div className={`bg-duniacrypto-panel border border-gray-700 ${viewMode === 'heatmap' ? 'p-1 sm:p-2' : 'px-2 sm:px-4 md:px-6'}`}>
               {/* Search Input - Only show for table mode */}
               {viewMode === 'table' && (
                 <div className="relative mb-4">
