@@ -982,8 +982,8 @@ function MarketOverviewRedesigned() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-3 gap-1 sm:gap-2 md:gap-4">
-        {[1, 2, 3].map((i) => (
+      <div className="grid grid-cols-2 gap-1 sm:gap-2 md:gap-4">
+        {[1, 2].map((i) => (
           <div key={i} className="bg-duniacrypto-panel rounded-md sm:rounded-lg border border-gray-700 p-1.5 sm:p-2 md:p-4 h-12 sm:h-14 md:h-16 lg:h-20">
             <div className="animate-pulse">
               <div className="h-1 sm:h-1.5 md:h-2 bg-gray-700 rounded w-2/3 mb-1 sm:mb-1.5 md:mb-2"></div>
@@ -1017,7 +1017,7 @@ function MarketOverviewRedesigned() {
   };
 
   return (
-    <div className="grid grid-cols-3 gap-1 sm:gap-2 md:gap-4">
+    <div className="grid grid-cols-2 gap-1 sm:gap-2 md:gap-4">
       {/* Box 1: Market Cap */}
       <div className="bg-duniacrypto-panel rounded-md sm:rounded-lg border border-gray-700 p-1.5 sm:p-2 md:p-4 flex flex-col justify-center min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] lg:min-h-[5rem]">
         <h3 className="text-xs font-semibold text-gray-300 mb-0.5 sm:mb-1 md:mb-1.5">Market Cap</h3>
@@ -1037,17 +1037,6 @@ function MarketOverviewRedesigned() {
         </div>
         <div className="text-xs text-gray-400 leading-tight">
           Active: {(marketData.active_cryptocurrencies || 0).toLocaleString()}
-        </div>
-      </div>
-
-      {/* Box 3: Market Dominance */}
-      <div className="bg-duniacrypto-panel rounded-md sm:rounded-lg border border-gray-700 p-1.5 sm:p-2 md:p-4 flex flex-col justify-center min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] lg:min-h-[5rem]">
-        <h3 className="text-xs font-semibold text-gray-300 mb-0.5 sm:mb-1 md:mb-1.5">Dominance</h3>
-        <div className="text-xs sm:text-sm md:text-base font-bold text-white mb-0.5 md:mb-1 leading-tight">
-          {(marketData.market_cap_percentage?.btc || 0).toFixed(1)}% BTC
-        </div>
-        <div className="text-xs text-gray-400 leading-tight">
-          {(marketData.market_cap_percentage?.eth || 0).toFixed(1)}% ETH
         </div>
       </div>
     </div>
