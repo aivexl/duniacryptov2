@@ -56,6 +56,8 @@ export default function AcademyClient({ articles = [] }) {
   const [activeTopic, setActiveTopic] = useState('');
   const [activeNetwork, setActiveNetwork] = useState('');
   const [displayCount, setDisplayCount] = useState(9);
+  const [showTopics, setShowTopics] = useState(false);
+  const [showNetworks, setShowNetworks] = useState(false);
   
   useEffect(() => {
     setIsClient(true);
@@ -203,10 +205,31 @@ export default function AcademyClient({ articles = [] }) {
 
       {/* SECTION 2 - Kategori Topik Crypto */}
       <section className="mb-12">
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
-          Topik Crypto
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-white">
+            Topik Crypto
+          </h2>
+          {/* Mobile Dropdown Toggle */}
+          <button
+            onClick={() => setShowTopics(!showTopics)}
+            className="md:hidden flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <span className="text-sm font-medium">
+              {showTopics ? 'Sembunyikan' : 'Tampilkan'}
+            </span>
+            <svg 
+              className={`w-4 h-4 transition-transform duration-200 ${showTopics ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+        <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 transition-all duration-300 ${
+          showTopics ? 'block' : 'hidden md:grid'
+        }`}>
           {TOPIC_CATEGORIES.map((topic) => (
             <button
               key={topic}
@@ -225,10 +248,31 @@ export default function AcademyClient({ articles = [] }) {
 
       {/* SECTION 3 - Kategori Jaringan Blockchain */}
       <section className="mb-12">
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
-          Jaringan Blockchain
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-white">
+            Jaringan Blockchain
+          </h2>
+          {/* Mobile Dropdown Toggle */}
+          <button
+            onClick={() => setShowNetworks(!showNetworks)}
+            className="md:hidden flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <span className="text-sm font-medium">
+              {showNetworks ? 'Sembunyikan' : 'Tampilkan'}
+            </span>
+            <svg 
+              className={`w-4 h-4 transition-transform duration-200 ${showNetworks ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 transition-all duration-300 ${
+          showNetworks ? 'block' : 'hidden md:grid'
+        }`}>
           {NETWORK_CATEGORIES.map((network) => (
             <button
               key={network}

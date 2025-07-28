@@ -80,35 +80,35 @@ export default function NewsroomClient({ articles = [] }) {
 
   return (
     <CoinGeckoProvider>
-      {/* Main Layout - Fixed width 1232px and proportional */}
-      <main className="w-[1232px] mx-auto px-6 py-4 md:py-6">
-        {/* Header - Proportional width */}
-        <div className="relative mb-12">
+      {/* Main Layout - Responsive width */}
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 md:py-6">
+        {/* Header - Responsive */}
+        <div className="relative mb-8 md:mb-12">
           {/* Background Full Width */}
           <div className="absolute inset-x-0 top-0 bottom-0 bg-gradient-to-r from-cyan-900/20 via-blue-900/20 to-purple-900/20 rounded-xl border border-cyan-500/30 backdrop-blur-sm"></div>
           {/* Content */}
-          <div className="relative text-center py-12 px-6">
-            <h1 className="text-4xl font-bold text-white mb-3">Newsroom</h1>
-            <p className="text-xl md:text-2xl text-gray-300">
+          <div className="relative text-center py-8 md:py-12 px-4 md:px-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Newsroom</h1>
+            <p className="text-lg md:text-xl lg:text-2xl text-gray-300">
               Berita terbaru seputar cryptocurrency dan blockchain
             </p>
           </div>
         </div>
         
-        {/* Articles List - Proportional horizontal layout */}
+        {/* Articles List - Responsive layout */}
         {displayedArticles.length > 0 ? (
           <>
-            <div className="space-y-4 mb-12">
+            <div className="space-y-4 mb-8 md:mb-12">
               {displayedArticles.map((article) => (
                 <a 
                   key={article._id}
                   href={`/newsroom/${article.slug.current}`}
                   className="block bg-duniacrypto-panel rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group border border-gray-800 cursor-pointer transform hover:scale-[1.02] no-underline hover:no-underline focus:no-underline active:no-underline"
                 >
-                  {/* Article Content - Proportional horizontal layout */}
-                  <div className="flex flex-row">
-                    {/* Article Image - Proportional width (25% of container) */}
-                    <div className="relative aspect-[4/3] w-48 md:w-60 lg:w-72 max-w-xs h-auto overflow-hidden flex-shrink-0">
+                  {/* Article Content - Responsive layout */}
+                  <div className="flex flex-col md:flex-row">
+                    {/* Article Image - Responsive width */}
+                    <div className="relative aspect-[4/3] w-full md:w-48 lg:w-60 xl:w-72 h-auto overflow-hidden flex-shrink-0">
                       <img
                         src={article.imageUrl || '/Asset/duniacrypto.png'}
                         alt={article.image?.alt || article.title}
@@ -122,9 +122,9 @@ export default function NewsroomClient({ articles = [] }) {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
                     
-                    {/* Article Content - Proportional padding (75% of container) */}
-                    <div className="flex-1 p-5 min-w-0">
-                      <h2 className="text-lg font-bold text-white mb-2 line-clamp-1 group-hover:text-duniacrypto-green transition-colors duration-300 leading-tight">
+                    {/* Article Content - Responsive padding */}
+                    <div className="flex-1 p-4 md:p-5 min-w-0">
+                      <h2 className="text-base md:text-lg font-bold text-white mb-2 line-clamp-1 group-hover:text-duniacrypto-green transition-colors duration-300 leading-tight">
                         {article.title}
                       </h2>
                       
@@ -149,7 +149,7 @@ export default function NewsroomClient({ articles = [] }) {
               <div className="text-center">
                 <button
                   onClick={handleLoadMore}
-                  className="bg-duniacrypto-green hover:bg-green-600 text-white font-semibold py-4 px-10 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-lg"
+                  className="bg-duniacrypto-green hover:bg-green-600 text-white font-semibold py-3 md:py-4 px-8 md:px-10 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-base md:text-lg"
                 >
                   Load More
                 </button>
@@ -157,11 +157,11 @@ export default function NewsroomClient({ articles = [] }) {
             )}
           </>
         ) : (
-          <div className="bg-duniacrypto-panel rounded-lg shadow p-12 text-center">
-            <h3 className="text-2xl font-semibold text-white mb-4">
+          <div className="bg-duniacrypto-panel rounded-lg shadow p-8 md:p-12 text-center">
+            <h3 className="text-xl md:text-2xl font-semibold text-white mb-4">
               Belum ada artikel Newsroom
             </h3>
-            <p className="text-gray-400 text-lg">
+            <p className="text-gray-400 text-base md:text-lg">
               Artikel Newsroom akan muncul di sini setelah ditambahkan melalui Sanity Studio.
             </p>
           </div>

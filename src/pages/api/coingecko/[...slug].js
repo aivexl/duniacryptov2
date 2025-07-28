@@ -21,10 +21,7 @@ export default async function handler(req, res) {
     const response = await fetch(apiUrl, {
       method: req.method,
       headers: {
-        'User-Agent': 'Mozilla/5.0',
         'Accept': 'application/json',
-        'X-CG-API-KEY': 'CG-jrJUt1cGARECPAnb9TUeCdqE',
-        'Cache-Control': `public, max-age=${cacheTime}`,
       },
       // Add timeout to prevent hanging requests
       signal: AbortSignal.timeout(15000), // 15 seconds timeout
@@ -55,6 +52,16 @@ export default async function handler(req, res) {
       res.end(JSON.stringify({ 
         error: 'Request timeout - CoinGecko API took too long to respond',
         detail: error.message 
+      }));
+      return;
+    }
+    
+    // Handle 431 error (Request Header Fields Too Large)
+    if (error.message && error.message.includes('431')) {
+      res.statusCode = 431;
+      res.end(JSON.stringify({ 
+        error: 'Request header fields too large - please try again',
+        detail: 'The request headers exceeded the server limit'
       }));
       return;
     }

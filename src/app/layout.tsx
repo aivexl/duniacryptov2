@@ -22,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -54,7 +55,7 @@ export default function RootLayout({
       >
         <ErrorBoundary>
           <Navbar />
-          <div className="min-h-screen flex flex-col">
+          <div className="min-h-screen flex flex-col pb-20 md:pb-0">
             {children}
           </div>
           <Footer />
