@@ -274,15 +274,15 @@ export default function AssetClient() {
       <CryptoTicker />
       
       {/* Main Layout */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+      <main className="w-full py-4 sm:py-6 md:py-8">
         
         {/* Market Overview - Always Visible */}
-        <section className="mb-4 sm:mb-6 md:mb-8">
+        <section className="mb-4 sm:mb-6 md:mb-8 px-3 sm:px-4 md:px-6 lg:px-8">
           <MarketOverviewRedesigned />
         </section>
 
         {/* Horizontal Menu Navigation */}
-        <div className="mb-3 sm:mb-4 md:mb-6">
+        <div className="mb-3 sm:mb-4 md:mb-6 px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex gap-1 sm:gap-2 md:gap-6 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 scrollbar-hide">
             {menuItems.map((item) => (
               <button
@@ -302,7 +302,7 @@ export default function AssetClient() {
 
         {/* Search Bar for Top 100 */}
         {activeSection === 'top-100' && (
-          <div className="mb-3 sm:mb-4 md:mb-6">
+          <div className="mb-3 sm:mb-4 md:mb-6 px-3 sm:px-4 md:px-6 lg:px-8">
             <div className="relative">
               <input
                 type="text"
@@ -331,7 +331,7 @@ export default function AssetClient() {
         {/* Content Sections */}
         {activeSection === 'top-100' && (
           <section className="mb-6 sm:mb-8 md:mb-12">
-            <div className="mb-3 sm:mb-4 md:mb-6">
+            <div className="mb-3 sm:mb-4 md:mb-6 px-3 sm:px-4 md:px-6 lg:px-8">
               <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-3 sm:mb-4">
                 Top 100 Cryptocurrencies
               </h2>
@@ -449,7 +449,7 @@ export default function AssetClient() {
               </div>
             </div>
             
-            <div className={`bg-duniacrypto-panel rounded-lg border border-gray-700 ${viewMode === 'heatmap' ? 'p-1 sm:p-2' : 'p-3 sm:p-4 md:p-6'}`}>
+            <div className={`bg-duniacrypto-panel border border-gray-700 ${viewMode === 'heatmap' ? 'p-1 sm:p-2' : ''}`}>
               {/* Search Input - Only show for table mode */}
               {viewMode === 'table' && (
                 <div className="relative mb-4">
