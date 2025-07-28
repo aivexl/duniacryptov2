@@ -1125,12 +1125,50 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
     // Apply category filter
     switch (filter) {
       case 'gainers':
-        filteredCoins = filteredCoins.filter(coin => coin.price_change_percentage_24h > 0);
-        filteredCoins.sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
+        filteredCoins = filteredCoins.filter(coin => {
+          const change = dateRange === '1h' ? coin.price_change_percentage_1h_in_currency :
+                        dateRange === '7d' ? coin.price_change_percentage_7d_in_currency :
+                        dateRange === '30d' ? coin.price_change_percentage_30d_in_currency :
+                        dateRange === '1y' ? coin.price_change_percentage_1y_in_currency :
+                        coin.price_change_percentage_24h;
+          return (change || 0) > 0;
+        });
+        filteredCoins.sort((a, b) => {
+          const changeA = dateRange === '1h' ? a.price_change_percentage_1h_in_currency :
+                         dateRange === '7d' ? a.price_change_percentage_7d_in_currency :
+                         dateRange === '30d' ? a.price_change_percentage_30d_in_currency :
+                         dateRange === '1y' ? a.price_change_percentage_1y_in_currency :
+                         a.price_change_percentage_24h;
+          const changeB = dateRange === '1h' ? b.price_change_percentage_1h_in_currency :
+                         dateRange === '7d' ? b.price_change_percentage_7d_in_currency :
+                         dateRange === '30d' ? b.price_change_percentage_30d_in_currency :
+                         dateRange === '1y' ? b.price_change_percentage_1y_in_currency :
+                         b.price_change_percentage_24h;
+          return (changeB || 0) - (changeA || 0);
+        });
         break;
       case 'losers':
-        filteredCoins = filteredCoins.filter(coin => coin.price_change_percentage_24h < 0);
-        filteredCoins.sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h);
+        filteredCoins = filteredCoins.filter(coin => {
+          const change = dateRange === '1h' ? coin.price_change_percentage_1h_in_currency :
+                        dateRange === '7d' ? coin.price_change_percentage_7d_in_currency :
+                        dateRange === '30d' ? coin.price_change_percentage_30d_in_currency :
+                        dateRange === '1y' ? coin.price_change_percentage_1y_in_currency :
+                        coin.price_change_percentage_24h;
+          return (change || 0) < 0;
+        });
+        filteredCoins.sort((a, b) => {
+          const changeA = dateRange === '1h' ? a.price_change_percentage_1h_in_currency :
+                         dateRange === '7d' ? a.price_change_percentage_7d_in_currency :
+                         dateRange === '30d' ? a.price_change_percentage_30d_in_currency :
+                         dateRange === '1y' ? a.price_change_percentage_1y_in_currency :
+                         a.price_change_percentage_24h;
+          const changeB = dateRange === '1h' ? b.price_change_percentage_1h_in_currency :
+                         dateRange === '7d' ? b.price_change_percentage_7d_in_currency :
+                         dateRange === '30d' ? b.price_change_percentage_30d_in_currency :
+                         dateRange === '1y' ? b.price_change_percentage_1y_in_currency :
+                         b.price_change_percentage_24h;
+          return (changeA || 0) - (changeB || 0);
+        });
         break;
       case 'ethereum':
         const ethKeywords = ['eth', 'ethereum', 'erc', 'defi', 'dao', 'uni', 'aave', 'comp', 'mkr', 'sushi', '1inch', 'curve', 'balancer'];
@@ -1282,47 +1320,35 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
         break;
     }
 
-    // Apply date range filter
-    if (dateRange && dateRange !== '24h') {
+    // Apply date range sorting (no filtering, just sorting by the selected time period)
+    if (dateRange) {
       switch (dateRange) {
         case '1h':
-          // Filter by 1h performance - show coins with significant 1h movement
-          filteredCoins = filteredCoins.filter(coin => 
-            Math.abs(coin.price_change_percentage_1h_in_currency || 0) > 1
-          );
           filteredCoins.sort((a, b) => 
-            Math.abs(b.price_change_percentage_1h_in_currency || 0) - Math.abs(a.price_change_percentage_1h_in_currency || 0)
+            (b.price_change_percentage_1h_in_currency || 0) - (a.price_change_percentage_1h_in_currency || 0)
           );
           break;
         case '7d':
-          // Filter by 7d performance - show coins with significant 7d movement
-          filteredCoins = filteredCoins.filter(coin => 
-            Math.abs(coin.price_change_percentage_7d_in_currency || 0) > 5
-          );
           filteredCoins.sort((a, b) => 
-            Math.abs(b.price_change_percentage_7d_in_currency || 0) - Math.abs(a.price_change_percentage_7d_in_currency || 0)
+            (b.price_change_percentage_7d_in_currency || 0) - (a.price_change_percentage_7d_in_currency || 0)
           );
           break;
         case '30d':
-          // Filter by 30d performance - show coins with significant 30d movement
-          filteredCoins = filteredCoins.filter(coin => 
-            Math.abs(coin.price_change_percentage_30d_in_currency || 0) > 10
-          );
           filteredCoins.sort((a, b) => 
-            Math.abs(b.price_change_percentage_30d_in_currency || 0) - Math.abs(a.price_change_percentage_30d_in_currency || 0)
+            (b.price_change_percentage_30d_in_currency || 0) - (a.price_change_percentage_30d_in_currency || 0)
           );
           break;
         case '1y':
-          // Filter by 1y performance - show coins with significant 1y movement
-          filteredCoins = filteredCoins.filter(coin => 
-            Math.abs(coin.price_change_percentage_1y_in_currency || 0) > 20
-          );
           filteredCoins.sort((a, b) => 
-            Math.abs(b.price_change_percentage_1y_in_currency || 0) - Math.abs(a.price_change_percentage_1y_in_currency || 0)
+            (b.price_change_percentage_1y_in_currency || 0) - (a.price_change_percentage_1y_in_currency || 0)
           );
           break;
+        case '24h':
         default:
-          // For 24h, no additional filtering needed
+          // Sort by 24h performance (default)
+          filteredCoins.sort((a, b) => 
+            (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0)
+          );
           break;
       }
     }
@@ -1361,7 +1387,12 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
             <th className="text-left py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">#</th>
             <th className="text-left py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">Asset</th>
             <th className="text-right py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">Price</th>
-            <th className="text-right py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">24h %</th>
+            <th className="text-right py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">
+              {dateRange === '1h' ? '1h %' : 
+               dateRange === '7d' ? '7d %' : 
+               dateRange === '30d' ? '30d %' : 
+               dateRange === '1y' ? '1y %' : '24h %'}
+            </th>
             <th className="text-right py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 font-semibold text-gray-300 text-xs sm:text-sm">Market Cap</th>
           </tr>
         </thead>
@@ -1404,7 +1435,13 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
                 {formatPrice(coin.current_price)}
               </td>
               <td className="py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 text-right font-medium text-xs sm:text-sm md:text-base">
-                {formatPercentage(coin.price_change_percentage_24h)}
+                {formatPercentage(
+                  dateRange === '1h' ? coin.price_change_percentage_1h_in_currency :
+                  dateRange === '7d' ? coin.price_change_percentage_7d_in_currency :
+                  dateRange === '30d' ? coin.price_change_percentage_30d_in_currency :
+                  dateRange === '1y' ? coin.price_change_percentage_1y_in_currency :
+                  coin.price_change_percentage_24h
+                )}
               </td>
               <td className="py-1.5 sm:py-2 md:py-3 px-0.5 sm:px-1 md:px-2 lg:px-4 text-right font-medium text-white text-xs sm:text-sm md:text-base">
                 {formatMarketCap(coin.market_cap)}
@@ -1635,10 +1672,24 @@ function CryptoHeatmap({ searchQuery, filter, dateRange, onCoinClick }) {
     // Apply category filter
     switch (filter) {
       case 'gainers':
-        filteredCoins = filteredCoins.filter(coin => coin.price_change_percentage_24h > 0);
+        filteredCoins = filteredCoins.filter(coin => {
+          const change = dateRange === '1h' ? coin.price_change_percentage_1h_in_currency :
+                        dateRange === '7d' ? coin.price_change_percentage_7d_in_currency :
+                        dateRange === '30d' ? coin.price_change_percentage_30d_in_currency :
+                        dateRange === '1y' ? coin.price_change_percentage_1y_in_currency :
+                        coin.price_change_percentage_24h;
+          return (change || 0) > 0;
+        });
         break;
       case 'losers':
-        filteredCoins = filteredCoins.filter(coin => coin.price_change_percentage_24h < 0);
+        filteredCoins = filteredCoins.filter(coin => {
+          const change = dateRange === '1h' ? coin.price_change_percentage_1h_in_currency :
+                        dateRange === '7d' ? coin.price_change_percentage_7d_in_currency :
+                        dateRange === '30d' ? coin.price_change_percentage_30d_in_currency :
+                        dateRange === '1y' ? coin.price_change_percentage_1y_in_currency :
+                        coin.price_change_percentage_24h;
+          return (change || 0) < 0;
+        });
         break;
       case 'ethereum':
         const ethKeywords = ['ethereum', 'eth', 'erc', 'defi', 'nft'];
@@ -1788,47 +1839,35 @@ function CryptoHeatmap({ searchQuery, filter, dateRange, onCoinClick }) {
         break;
     }
 
-    // Apply date range filter
-    if (dateRange && dateRange !== '24h') {
+    // Apply date range sorting (no filtering, just sorting by the selected time period)
+    if (dateRange) {
       switch (dateRange) {
         case '1h':
-          // Filter by 1h performance - show coins with significant 1h movement
-          filteredCoins = filteredCoins.filter(coin => 
-            Math.abs(coin.price_change_percentage_1h_in_currency || 0) > 1
-          );
           filteredCoins.sort((a, b) => 
-            Math.abs(b.price_change_percentage_1h_in_currency || 0) - Math.abs(a.price_change_percentage_1h_in_currency || 0)
+            (b.price_change_percentage_1h_in_currency || 0) - (a.price_change_percentage_1h_in_currency || 0)
           );
           break;
         case '7d':
-          // Filter by 7d performance - show coins with significant 7d movement
-          filteredCoins = filteredCoins.filter(coin => 
-            Math.abs(coin.price_change_percentage_7d_in_currency || 0) > 5
-          );
           filteredCoins.sort((a, b) => 
-            Math.abs(b.price_change_percentage_7d_in_currency || 0) - Math.abs(a.price_change_percentage_7d_in_currency || 0)
+            (b.price_change_percentage_7d_in_currency || 0) - (a.price_change_percentage_7d_in_currency || 0)
           );
           break;
         case '30d':
-          // Filter by 30d performance - show coins with significant 30d movement
-          filteredCoins = filteredCoins.filter(coin => 
-            Math.abs(coin.price_change_percentage_30d_in_currency || 0) > 10
-          );
           filteredCoins.sort((a, b) => 
-            Math.abs(b.price_change_percentage_30d_in_currency || 0) - Math.abs(a.price_change_percentage_30d_in_currency || 0)
+            (b.price_change_percentage_30d_in_currency || 0) - (a.price_change_percentage_30d_in_currency || 0)
           );
           break;
         case '1y':
-          // Filter by 1y performance - show coins with significant 1y movement
-          filteredCoins = filteredCoins.filter(coin => 
-            Math.abs(coin.price_change_percentage_1y_in_currency || 0) > 20
-          );
           filteredCoins.sort((a, b) => 
-            Math.abs(b.price_change_percentage_1y_in_currency || 0) - Math.abs(a.price_change_percentage_1y_in_currency || 0)
+            (b.price_change_percentage_1y_in_currency || 0) - (a.price_change_percentage_1y_in_currency || 0)
           );
           break;
+        case '24h':
         default:
-          // For 24h, no additional filtering needed
+          // Sort by 24h performance (default)
+          filteredCoins.sort((a, b) => 
+            (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0)
+          );
           break;
       }
     }
@@ -1876,7 +1915,12 @@ function CryptoHeatmap({ searchQuery, filter, dateRange, onCoinClick }) {
       <div className="bg-gray-800 rounded-xl border border-gray-700 p-2 sm:p-4">
         {/* Header */}
         <div className="mb-3 sm:mb-4">
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2">Top 48 Crypto Market Heatmap</h3>
+          <h3 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2">
+            Top 48 Crypto Market Heatmap - {dateRange === '1h' ? '1h' : 
+                                           dateRange === '7d' ? '7d' : 
+                                           dateRange === '30d' ? '30d' : 
+                                           dateRange === '1y' ? '1y' : '24h'} Performance
+          </h3>
           <p className="text-gray-400 text-xs sm:text-sm">Real-time cryptocurrency market overview - Bitcoin dominates 50% of the space</p>
         </div>
         
@@ -1886,7 +1930,12 @@ function CryptoHeatmap({ searchQuery, filter, dateRange, onCoinClick }) {
           <div className="grid grid-cols-10 sm:grid-cols-12 md:grid-cols-14 lg:grid-cols-16 xl:grid-cols-18 gap-0.5 h-full">
             {(filteredCoins || []).slice(0, 48).map((coin, index) => {
               if (!coin || !coin.id) return null;
-              const priceChange = coin.price_change_percentage_24h || 0;
+              const priceChange = 
+                dateRange === '1h' ? coin.price_change_percentage_1h_in_currency || 0 :
+                dateRange === '7d' ? coin.price_change_percentage_7d_in_currency || 0 :
+                dateRange === '30d' ? coin.price_change_percentage_30d_in_currency || 0 :
+                dateRange === '1y' ? coin.price_change_percentage_1y_in_currency || 0 :
+                coin.price_change_percentage_24h || 0;
               const marketCapRank = coin.market_cap_rank || 999;
               
               // Calculate size based on rank - Bitcoin 50% dominance, others scaled accordingly
