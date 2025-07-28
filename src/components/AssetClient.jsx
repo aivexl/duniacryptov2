@@ -909,15 +909,6 @@ export default function AssetClient() {
                       <span className="text-white">#{detailedCoinData?.market_data?.market_cap_rank || selectedCoin.market_cap_rank}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Market Cap Dominance:</span>
-                      <span className="text-white">
-                        {detailedCoinData?.market_data?.market_cap_percentage?.usd ? 
-                          detailedCoinData.market_data.market_cap_percentage.usd.toFixed(2) : 
-                          'N/A'
-                        }%
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
                       <span className="text-gray-400">Volume/Market Cap:</span>
                       <span className="text-white">
                         {detailedCoinData?.market_data?.total_volume?.usd && detailedCoinData?.market_data?.market_cap?.usd ? 
