@@ -958,8 +958,6 @@ function MarketOverviewRedesigned() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('Market data received:', data); // Debug log
-        console.log('Market cap percentage structure:', data.data?.market_cap_percentage); // Debug log
         setMarketData(data.data);
       } catch (error) {
         console.error('Error fetching market data:', error);
@@ -1046,24 +1044,10 @@ function MarketOverviewRedesigned() {
       <div className="bg-duniacrypto-panel rounded-md sm:rounded-lg border border-gray-700 p-1.5 sm:p-2 md:p-4 flex flex-col justify-center min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] lg:min-h-[5rem]">
         <h3 className="text-xs font-semibold text-gray-300 mb-0.5 sm:mb-1 md:mb-1.5">Dominance</h3>
         <div className="text-xs sm:text-sm md:text-base font-bold text-white mb-0.5 md:mb-1 leading-tight">
-          {(() => {
-            const btcPercentage = marketData.market_cap_percentage?.btc;
-            console.log('BTC percentage:', btcPercentage, 'Type:', typeof btcPercentage); // Debug log
-            if (btcPercentage !== undefined && btcPercentage !== null && !isNaN(btcPercentage)) {
-              return btcPercentage.toFixed(1);
-            }
-            return '48.5';
-          })()}% BTC
+          {(marketData.market_cap_percentage?.btc || 0).toFixed(1)}% BTC
         </div>
         <div className="text-xs text-gray-400 leading-tight">
-          {(() => {
-            const ethPercentage = marketData.market_cap_percentage?.eth;
-            console.log('ETH percentage:', ethPercentage, 'Type:', typeof ethPercentage); // Debug log
-            if (ethPercentage !== undefined && ethPercentage !== null && !isNaN(ethPercentage)) {
-              return ethPercentage.toFixed(1);
-            }
-            return '18.2';
-          })()}% ETH
+          {(marketData.market_cap_percentage?.eth || 0).toFixed(1)}% ETH
         </div>
       </div>
     </div>
