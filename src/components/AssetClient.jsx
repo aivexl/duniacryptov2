@@ -275,29 +275,6 @@ export default function AssetClient() {
       
       {/* Main Layout */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-        {/* Header */}
-        <div className="relative mb-4 sm:mb-6 md:mb-8">
-          {/* Background Full Width */}
-          <div className="absolute inset-x-0 top-0 bottom-0 bg-gradient-to-r from-cyan-900/20 via-blue-900/20 to-purple-900/20 rounded-lg sm:rounded-xl border border-cyan-500/30 backdrop-blur-sm"></div>
-          
-          {/* Content */}
-          <div className="relative text-center py-4 sm:py-6 md:py-8 px-4 sm:px-6">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3">
-              Asset
-            </h1>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300">
-              Market Overview, Top 100 Crypto, dan Trending Coin
-            </p>
-          </div>
-        </div>
-
-        {/* Market Overview - Always Visible */}
-        <section className="mb-4 sm:mb-6 md:mb-8">
-          <h2 className="text-base sm:text-lg md:text-xl font-bold text-white mb-2 sm:mb-3 md:mb-4">
-            Market Overview
-          </h2>
-          <MarketOverviewRedesigned />
-        </section>
 
         {/* Horizontal Menu Navigation */}
         <div className="mb-3 sm:mb-4 md:mb-6">
