@@ -8,7 +8,7 @@ const urls = [
   'http://localhost:3000',
   'http://localhost:3000/academy',
   'http://localhost:3000/newsroom',
-  'http://localhost:3000/api/coingecko/api/v3/global',
+  'http://localhost:3000/api/coingecko/global',
   'http://localhost:3000/api/sanity/query?query=*[_type=="article"]'
 ];
 

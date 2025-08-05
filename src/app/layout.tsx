@@ -22,7 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <head>
+            <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/Asset/belugalogo2.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/Asset/belugalogo2.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <script
           dangerouslySetInnerHTML={{
@@ -52,14 +55,16 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-900`}
       >
         <ErrorBoundary>
-          <Navbar />
-          <div className="min-h-screen flex flex-col pb-20 md:pb-0">
-            {children}
+          <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
           </div>
-          <Footer />
         </ErrorBoundary>
         <Analytics />
       </body>

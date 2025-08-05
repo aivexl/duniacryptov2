@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { CoinGeckoProvider } from './CoinGeckoContext';
 import MarketOverview from './MarketOverview';
 import CryptoTable from './CryptoTable';
@@ -47,6 +48,7 @@ const safeNumber = (value) => {
 };
 
 export default function AssetClient() {
+  const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [activeSection, setActiveSection] = useState('top-100');
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,12 +59,6 @@ export default function AssetClient() {
   const [showDateRangeFilter, setShowDateRangeFilter] = useState(false);
   const [dateRange, setDateRange] = useState('24h');
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'heatmap'
-  const [showCoinDetail, setShowCoinDetail] = useState(false);
-  const [selectedCoin, setSelectedCoin] = useState(null);
-  const [detailedCoinData, setDetailedCoinData] = useState(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
-  const [lastClickedCoin, setLastClickedCoin] = useState(null);
-  const [clickTimeout, setClickTimeout] = useState(null);
   
   useEffect(() => {
     setIsClient(true);
@@ -89,125 +85,6 @@ export default function AssetClient() {
     });
   };
 
-  // Fetch detailed coin data with rate limiting and fallback
-  const fetchDetailedCoinData = async (coinId) => {
-    setLoadingDetail(true);
-    try {
-      // Add delay to prevent rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Try to get detailed coin data first (includes supply info) - simplified parameters
-      let coinDetailResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`);
-      
-      let detailedCoinInfo = null;
-      if (coinDetailResponse.ok) {
-        detailedCoinInfo = await coinDetailResponse.json();
-        console.log('Detailed coin info for', coinId, ':', detailedCoinInfo);
-      } else if (coinDetailResponse.status === 429) {
-        // Rate limited - wait and retry once
-        console.log('Rate limited, waiting 2 seconds before retry...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        coinDetailResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}?localization=false&market_data=true`);
-        if (coinDetailResponse.ok) {
-          detailedCoinInfo = await coinDetailResponse.json();
-          console.log('Detailed coin info for', coinId, ' (retry):', detailedCoinInfo);
-        }
-      } else {
-        // Fallback: try with even fewer parameters
-        coinDetailResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}?localization=false&market_data=true`);
-        if (coinDetailResponse.ok) {
-          detailedCoinInfo = await coinDetailResponse.json();
-          console.log('Detailed coin info for', coinId, ' (fallback):', detailedCoinInfo);
-        }
-      }
-      
-      // Use daily market chart endpoint for performance data
-      let chartResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30&interval=daily`);
-      
-      if (chartResponse.status === 429) {
-        // Rate limited - wait and retry once
-        console.log('Chart rate limited, waiting 2 seconds before retry...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        chartResponse = await fetch(`/api/coingecko/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30&interval=daily`);
-      }
-      
-      let performanceData = {
-        price_change_percentage_1h_in_currency: 0,
-        price_change_percentage_24h: 0,
-        price_change_percentage_7d_in_currency: 0,
-        price_change_percentage_30d_in_currency: 0
-      };
-      
-      if (chartResponse.ok) {
-        const chartData = await chartResponse.json();
-        console.log('Daily market chart data for', coinId, ':', chartData);
-        
-        // Calculate performance percentages from daily price data
-        const prices = chartData.prices || [];
-        
-        if (prices.length >= 2) {
-          const currentPrice = prices[prices.length - 1]?.[1] || 0;
-          const day1Price = prices[prices.length - 2]?.[1] || currentPrice;
-          const day7Price = prices[Math.max(0, prices.length - 8)]?.[1] || currentPrice;
-          const day30Price = prices[0]?.[1] || currentPrice;
-          
-          // Calculate percentage changes
-          const change24h = currentPrice && day1Price ? ((currentPrice - day1Price) / day1Price) * 100 : 0;
-          const change7d = currentPrice && day7Price ? ((currentPrice - day7Price) / day7Price) * 100 : 0;
-          const change30d = currentPrice && day30Price ? ((currentPrice - day30Price) / day30Price) * 100 : 0;
-          
-          // For 1h, use selectedCoin data if available
-          let change1h = 0;
-          if (selectedCoin && selectedCoin.price_change_percentage_1h_in_currency !== undefined) {
-            change1h = selectedCoin.price_change_percentage_1h_in_currency;
-            console.log('Using 1h data from selectedCoin:', change1h);
-          } else {
-            // Fallback: calculate 1h from daily data (approximation)
-            const day0Price = prices[prices.length - 1]?.[1] || currentPrice;
-            const day0_5Price = prices[Math.max(0, prices.length - 2)]?.[1] || currentPrice;
-            change1h = day0Price && day0_5Price ? ((day0Price - day0_5Price) / day0_5Price) * 100 : 0;
-            console.log('Calculated 1h approximation from daily data:', change1h);
-          }
-          
-          performanceData = {
-            price_change_percentage_1h_in_currency: change1h,
-            price_change_percentage_24h: change24h,
-            price_change_percentage_7d_in_currency: change7d,
-            price_change_percentage_30d_in_currency: change30d
-          };
-        }
-      }
-      
-      // Combine detailed coin info with performance data
-      const combinedData = {
-        market_data: {
-          ...performanceData,
-          // Supply information from detailed coin data
-          circulating_supply: detailedCoinInfo?.market_data?.circulating_supply,
-          total_supply: detailedCoinInfo?.market_data?.total_supply,
-          max_supply: detailedCoinInfo?.market_data?.max_supply,
-          // Market cap and volume info
-          market_cap: detailedCoinInfo?.market_data?.market_cap,
-          total_volume: detailedCoinInfo?.market_data?.total_volume,
-          // ATH and ATL info
-          ath: detailedCoinInfo?.market_data?.ath,
-          atl: detailedCoinInfo?.market_data?.atl,
-          // Market cap rank and percentage
-          market_cap_rank: detailedCoinInfo?.market_data?.market_cap_rank,
-          market_cap_percentage: detailedCoinInfo?.market_data?.market_cap_percentage
-        }
-      };
-      
-      console.log('Combined detailed coin data:', combinedData);
-      setDetailedCoinData(combinedData);
-    } catch (error) {
-      console.error('Error fetching detailed coin data:', error);
-      setDetailedCoinData(null);
-    } finally {
-      setLoadingDetail(false);
-    }
-  };
-
   // Close date range filter when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -219,29 +96,6 @@ export default function AssetClient() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showDateRangeFilter]);
-
-  // Close coin detail when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showCoinDetail && !event.target.closest('.coin-detail-overlay')) {
-        setShowCoinDetail(false);
-        setSelectedCoin(null);
-        setDetailedCoinData(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showCoinDetail]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (clickTimeout) {
-        clearTimeout(clickTimeout);
-      }
-    };
-  }, [clickTimeout]);
 
   if (!isClient) {
     return null;
@@ -318,6 +172,7 @@ export default function AssetClient() {
             ))}
           </div>
         </div>
+
 
         {/* Search Bar for Top 100 */}
         {activeSection === 'top-100' && (
@@ -469,21 +324,6 @@ export default function AssetClient() {
             </div>
             
             <div className={`bg-duniacrypto-panel border border-gray-700 ${viewMode === 'heatmap' ? 'p-1 sm:p-2' : 'px-2 sm:px-4 md:px-6'}`}>
-              {/* Search Input - Only show for table mode */}
-              {viewMode === 'table' && (
-                <div className="relative mb-4">
-                  <input
-                    type="text"
-                    placeholder="Search coins..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <svg className="absolute right-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-              )}
 
               {viewMode === 'table' ? (
                 <CryptoTableWithSearch 
@@ -491,9 +331,8 @@ export default function AssetClient() {
                   filter={cryptoFilter}
                   dateRange={dateRange}
                   onCoinClick={(coin) => {
-                    setSelectedCoin(coin);
-                    setShowCoinDetail(true);
-                    fetchDetailedCoinData(coin.id);
+                    // Navigate to detail page instead of showing overlay
+                    router.push(`/crypto/${coin.id}`);
                   }}
                 />
                             ) : (
@@ -502,28 +341,10 @@ export default function AssetClient() {
                   filter={cryptoFilter}
                   dateRange={dateRange}
                   onCoinClick={(coin) => {
-                      // Debounce rapid clicks to prevent API spam
-                      if (lastClickedCoin === coin.id && clickTimeout) {
-                        return; // Ignore rapid clicks on same coin
-                      }
-                      
-                      // Clear previous timeout
-                      if (clickTimeout) {
-                        clearTimeout(clickTimeout);
-                      }
-                      
-                      setLastClickedCoin(coin.id);
-                      setSelectedCoin(coin);
-                      setShowCoinDetail(true);
-                      
-                      // Set a timeout to prevent rapid API calls
-                      const timeout = setTimeout(() => {
-                        fetchDetailedCoinData(coin.id);
-                      }, 500); // 500ms delay
-                      
-                      setClickTimeout(timeout);
-                    }}
-                  />
+                    // Navigate to detail page instead of showing overlay
+                    router.push(`/crypto/${coin.id}`);
+                  }}
+                />
               )}
             </div>
           </section>
@@ -704,9 +525,8 @@ export default function AssetClient() {
             <div className="bg-duniacrypto-panel rounded-lg border border-gray-700 p-3 sm:p-4 md:p-6">
                               <TrendingCoins100 
                   onCoinClick={(coin) => {
-                    setSelectedCoin(coin);
-                    setShowCoinDetail(true);
-                    fetchDetailedCoinData(coin.id);
+                    // Navigate to detail page instead of showing overlay
+                    router.push(`/crypto/${coin.id}`);
                   }}
                 />
             </div>
@@ -736,220 +556,6 @@ export default function AssetClient() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
           </svg>
         </button>
-      )}
-
-      {/* Coin Detail Overlay - Bottom Sheet */}
-      {showCoinDetail && selectedCoin && (
-        <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-50"
-            onClick={() => {
-              setShowCoinDetail(false);
-              setSelectedCoin(null);
-            }}
-          ></div>
-          
-          {/* Coin Detail Menu - Bottom Sheet */}
-          <div className="fixed bottom-0 left-0 right-0 bg-duniacrypto-panel border-t border-gray-700 rounded-t-xl z-50 animate-slide-up coin-detail-overlay">
-            {/* Handle Bar */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1 bg-gray-600 rounded-full"></div>
-            </div>
-            
-            {/* Header */}
-            <div className="px-4 sm:px-6 pb-4 border-b border-gray-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={selectedCoin.image}
-                    alt={selectedCoin.name}
-                    className="w-12 h-12 rounded-full"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/Asset/duniacrypto.png';
-                    }}
-                  />
-                  <div>
-                    <h3 className="text-lg sm:text-xl font-bold text-white">
-                      {selectedCoin.name} ({selectedCoin.symbol.toUpperCase()})
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      Rank #{selectedCoin.market_cap_rank} • Market Cap: {formatMarketCap(selectedCoin.market_cap)}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowCoinDetail(false);
-                    setSelectedCoin(null);
-                    setDetailedCoinData(null);
-                  }}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            {/* Coin Details */}
-            <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto">
-              {/* Price Section */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-lg font-bold text-white">Current Price</h4>
-                  <div className={`text-lg font-bold ${(selectedCoin.price_change_percentage_24h || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {(selectedCoin.price_change_percentage_24h || 0) > 0 ? '+' : ''}{(selectedCoin.price_change_percentage_24h || 0).toFixed(2)}%
-                  </div>
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                  {formatPrice(detailedCoinData?.market_data?.current_price?.usd || selectedCoin.current_price)}
-                </div>
-                <div className="text-sm text-gray-400">
-                  Market Cap: {formatMarketCap(detailedCoinData?.market_data?.market_cap?.usd || selectedCoin.market_cap)} • Volume: {formatMarketCap(detailedCoinData?.market_data?.total_volume?.usd || selectedCoin.total_volume)}
-                </div>
-              </div>
-
-              {/* Market Data Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-gray-800 rounded-lg p-3">
-                  <div className="text-sm text-gray-400 mb-1">24h High</div>
-                  <div className="text-white font-semibold">{formatPrice(detailedCoinData?.market_data?.high_24h?.usd || selectedCoin.high_24h)}</div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3">
-                  <div className="text-sm text-gray-400 mb-1">24h Low</div>
-                  <div className="text-white font-semibold">{formatPrice(detailedCoinData?.market_data?.low_24h?.usd || selectedCoin.low_24h)}</div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3">
-                  <div className="text-sm text-gray-400 mb-1">Circulating Supply</div>
-                  <div className="text-white font-semibold">{formatMarketCap(detailedCoinData?.market_data?.circulating_supply || selectedCoin.circulating_supply)}</div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3">
-                  <div className="text-sm text-gray-400 mb-1">Total Supply</div>
-                  <div className="text-white font-semibold">
-                    {(detailedCoinData?.market_data?.total_supply || selectedCoin.total_supply) ? 
-                      formatMarketCap(detailedCoinData?.market_data?.total_supply || selectedCoin.total_supply) : 
-                      'Unlimited'
-                    }
-                  </div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3">
-                  <div className="text-sm text-gray-400 mb-1">Max Supply</div>
-                  <div className="text-white font-semibold">
-                    {(detailedCoinData?.market_data?.max_supply || selectedCoin.max_supply) ? 
-                      formatMarketCap(detailedCoinData?.market_data?.max_supply || selectedCoin.max_supply) : 
-                      'Unlimited'
-                    }
-                  </div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3">
-                  <div className="text-sm text-gray-400 mb-1">ATH</div>
-                  <div className="text-white font-semibold">{formatPrice(detailedCoinData?.market_data?.ath?.usd || selectedCoin.ath)}</div>
-                </div>
-              </div>
-
-              {/* Performance Metrics */}
-              <div className="mb-6">
-                <h4 className="text-lg font-bold text-white mb-3">Performance</h4>
-                {loadingDetail ? (
-                  <div className="flex justify-center items-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="text-center">
-                      <div className="text-sm text-gray-400 mb-1">1h</div>
-                                              <div className={`font-semibold ${safeNumber(detailedCoinData?.market_data?.price_change_percentage_1h_in_currency ?? selectedCoin?.price_change_percentage_1h_in_currency ?? 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {safeNumber(detailedCoinData?.market_data?.price_change_percentage_1h_in_currency ?? selectedCoin?.price_change_percentage_1h_in_currency ?? 0) > 0 ? '+' : ''}{safeNumber(detailedCoinData?.market_data?.price_change_percentage_1h_in_currency ?? selectedCoin?.price_change_percentage_1h_in_currency ?? 0).toFixed(2)}%
-                        </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-gray-400 mb-1">24h</div>
-                                              <div className={`font-semibold ${safeNumber(detailedCoinData?.market_data?.price_change_percentage_24h ?? selectedCoin?.price_change_percentage_24h ?? 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {safeNumber(detailedCoinData?.market_data?.price_change_percentage_24h ?? selectedCoin?.price_change_percentage_24h ?? 0) > 0 ? '+' : ''}{safeNumber(detailedCoinData?.market_data?.price_change_percentage_24h ?? selectedCoin?.price_change_percentage_24h ?? 0).toFixed(2)}%
-                        </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-gray-400 mb-1">7d</div>
-                                              <div className={`font-semibold ${safeNumber(detailedCoinData?.market_data?.price_change_percentage_7d_in_currency ?? selectedCoin?.price_change_percentage_7d_in_currency ?? 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {safeNumber(detailedCoinData?.market_data?.price_change_percentage_7d_in_currency ?? selectedCoin?.price_change_percentage_7d_in_currency ?? 0) > 0 ? '+' : ''}{safeNumber(detailedCoinData?.market_data?.price_change_percentage_7d_in_currency ?? selectedCoin?.price_change_percentage_7d_in_currency ?? 0).toFixed(2)}%
-                        </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-sm text-gray-400 mb-1">30d</div>
-                                              <div className={`font-semibold ${safeNumber(detailedCoinData?.market_data?.price_change_percentage_30d_in_currency ?? selectedCoin?.price_change_percentage_30d_in_currency ?? 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {safeNumber(detailedCoinData?.market_data?.price_change_percentage_30d_in_currency ?? selectedCoin?.price_change_percentage_30d_in_currency ?? 0) > 0 ? '+' : ''}{safeNumber(detailedCoinData?.market_data?.price_change_percentage_30d_in_currency ?? selectedCoin?.price_change_percentage_30d_in_currency ?? 0).toFixed(2)}%
-                        </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Coin Description */}
-              <div className="mb-6">
-                <h4 className="text-lg font-bold text-white mb-3">About {selectedCoin.name}</h4>
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <p className="text-gray-300 text-sm leading-relaxed">
-                    {selectedCoin.name} ({selectedCoin.symbol.toUpperCase()}) is a cryptocurrency currently ranked #{selectedCoin.market_cap_rank} by market capitalization. 
-                    With a current market cap of {formatMarketCap(selectedCoin.market_cap)}, it represents a significant player in the digital asset ecosystem. 
-                    The coin has a circulating supply of {formatMarketCap(selectedCoin.circulating_supply)} tokens and has reached an all-time high of {formatPrice(selectedCoin.ath)}.
-                  </p>
-                </div>
-              </div>
-
-              {/* Additional Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <h5 className="text-white font-semibold mb-2">Market Statistics</h5>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Market Cap Rank:</span>
-                      <span className="text-white">#{detailedCoinData?.market_data?.market_cap_rank || selectedCoin.market_cap_rank}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Volume/Market Cap:</span>
-                      <span className="text-white">
-                        {detailedCoinData?.market_data?.total_volume?.usd && detailedCoinData?.market_data?.market_cap?.usd ? 
-                          ((detailedCoinData.market_data.total_volume.usd / detailedCoinData.market_data.market_cap.usd) * 100).toFixed(2) : 
-                          'N/A'
-                        }%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <h5 className="text-white font-semibold mb-2">Supply Information</h5>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Circulating Supply:</span>
-                      <span className="text-white">{formatMarketCap(selectedCoin.circulating_supply)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Total Supply:</span>
-                      <span className="text-white">
-                        {(detailedCoinData?.market_data?.total_supply || selectedCoin.total_supply) ? 
-                          formatMarketCap(detailedCoinData?.market_data?.total_supply || selectedCoin.total_supply) : 
-                          'Unlimited'
-                        }
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Max Supply:</span>
-                      <span className="text-white">
-                        {(detailedCoinData?.market_data?.max_supply || selectedCoin.max_supply) ? 
-                          formatMarketCap(detailedCoinData?.market_data?.max_supply || selectedCoin.max_supply) : 
-                          'Unlimited'
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
       )}
     </CoinGeckoProvider>
   );
@@ -1105,25 +711,35 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
   useEffect(() => {
     const fetchCoins = async () => {
       try {
-        // Try with 100 coins first - include price_change_percentage data
-        let response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&price_change_percentage=24h');
+        // Single API call with retry mechanism for 431 errors
+        let response;
+        let retryCount = 0;
+        const maxRetries = 3;
         
-        if (!response.ok) {
-          // If that fails, try with 50 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&price_change_percentage=24h');
+        while (retryCount < maxRetries) {
+          try {
+            response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&price_change_percentage=24h');
+            
+            if (response.status === 431) {
+              retryCount++;
+              if (retryCount < maxRetries) {
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                continue;
+              }
+            }
+            break;
+          } catch (error) {
+            retryCount++;
+            if (retryCount >= maxRetries) throw error;
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
         }
         
         if (!response.ok) {
-          // If that fails, try with 25 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&price_change_percentage=24h');
-        }
-        
-        if (!response.ok) {
-          // Final fallback - try with 10 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&per_page=10&price_change_percentage=24h');
-        }
-        
-        if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+          }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
@@ -1131,7 +747,7 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
         setCoins(data);
       } catch (error) {
         console.error('Error fetching coins:', error);
-        // Provide fallback data if all API calls fail
+        // Provide fallback data if API call fails
         setCoins([
           {
             id: 'bitcoin',
@@ -1613,7 +1229,7 @@ function TrendingCoins100({ onCoinClick }) {
   useEffect(() => {
     const fetchTrendingCoins = async () => {
       try {
-        const response = await fetch('/api/coingecko/api/v3/search/trending');
+        const response = await fetch('/api/coingecko/search/trending');
         const data = await response.json();
         setTrendingCoins(data.coins || []);
       } catch (error) {
@@ -1740,25 +1356,13 @@ function CryptoHeatmap({ searchQuery, filter, dateRange, onCoinClick }) {
     const fetchCoins = async () => {
       try {
         console.log('Fetching coins for heatmap...');
-        // Try with 100 coins first - include price_change_percentage data
-        let response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&price_change_percentage=1h,24h,7d,30d,1y');
+        // Single API call with reasonable limit to avoid rate limiting
+        const response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&price_change_percentage=1h,24h,7d,30d,1y');
         
         if (!response.ok) {
-          // If that fails, try with 50 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&price_change_percentage=1h,24h,7d,30d,1y');
-        }
-        
-        if (!response.ok) {
-          // If that fails, try with 25 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&price_change_percentage=1h,24h,7d,30d,1y');
-        }
-        
-        if (!response.ok) {
-          // Final fallback - try with 10 coins
-          response = await fetch('/api/coingecko/api/v3/coins/markets?vs_currency=usd&per_page=10&price_change_percentage=1h,24h,7d,30d,1y');
-        }
-        
-        if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+          }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         

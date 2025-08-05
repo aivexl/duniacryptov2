@@ -9,14 +9,16 @@ export default function GradientText({
 }) {
   const gradientStyle = {
     backgroundImage: `linear-gradient(to right, ${colors.join(", ")})`,
-    animationDuration: `${animationSpeed}s`,
-    fontWeight: 'bold',
+    backgroundSize: '300% 100%',
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    color: 'transparent',
+    animation: `gradient ${animationSpeed}s linear infinite`,
   };
 
   return (
-    <div className={`animated-gradient-text font-bold ${className}`}>
-      {showBorder && <div className="gradient-overlay" style={gradientStyle}></div>}
-      <div className="text-content" style={gradientStyle}>{children}</div>
-    </div>
+    <span className={`gradient-text-only ${className}`} style={gradientStyle}>
+      {children}
+    </span>
   );
 } 

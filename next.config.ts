@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // QUICK FIX: Disable ESLint and TypeScript errors during build for Vercel
+  // Disable ESLint and TypeScript errors during build
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -9,62 +9,25 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Performance optimizations
-  experimental: {
-    optimizePackageImports: ['react', 'next', 'dayjs'],
-  },
-  
-  // Turbopack configuration (moved from experimental)
-  turbopack: {
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
-  },
-  
   // Image optimization
   images: {
-    domains: ['cdn.sanity.io'],
+    domains: ['cdn.sanity.io', 'assets.coingecko.com'],
     formats: ['image/webp', 'image/avif'],
   },
   
   // Compression
   compress: true,
   
-  // Webpack optimizations
-  webpack: (config, { dev, isServer }) => {
-    if (dev && !isServer) {
+  // Simple webpack configuration
+  webpack: (config, { dev }) => {
+    if (dev) {
       config.watchOptions = {
-        ...config.watchOptions,
         poll: 1000,
         aggregateTimeout: 300,
       };
     }
-    
-    // Optimize bundle size
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-        },
-      },
-    };
-    
     return config;
   },
-  
-  // Reduce bundle size
-  output: 'standalone',
-  
-  /* config options here */
 };
 
 export default nextConfig;

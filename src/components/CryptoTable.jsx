@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import StarBorder from './StarBorder';
 import { useCoinGecko } from './CoinGeckoContext';
 
@@ -26,10 +27,15 @@ function formatNumber(num) {
 }
 
 export default function CryptoTable() {
+  const router = useRouter();
   const { coins, loading, error } = useCoinGecko();
   // Hilangkan state sortir
   const validCoins = Array.isArray(coins) ? coins : [];
   // Tidak perlu sortedCoins, langsung pakai validCoins
+
+  const handleCoinClick = (coin) => {
+    router.push(`/crypto/${coin.id}`);
+  };
   return (
     <div className="bg-duniacrypto-panel rounded-lg shadow p-4 relative mb-8">
       <div className="mb-4 flex justify-center">
@@ -60,7 +66,11 @@ export default function CryptoTable() {
           </thead>
           <tbody>
             {validCoins.map((coin) => (
-              <tr key={coin.id} className="border-b border-gray-800 hover:bg-duniacrypto-card transition">
+              <tr 
+                key={coin.id} 
+                className="border-b border-gray-800 hover:bg-duniacrypto-card transition cursor-pointer"
+                onClick={() => handleCoinClick(coin)}
+              >
                 <td className="py-1 px-1 md:py-2 md:px-2 font-bold text-center align-middle whitespace-nowrap">{coin.market_cap_rank}</td>
                 <td className="py-1 px-1 md:py-2 md:px-2 flex items-center gap-1 md:gap-2 align-middle whitespace-nowrap">
                   <img src={coin.image} alt={coin.symbol} className="w-4 h-4 md:w-5 md:h-5 mr-1" />

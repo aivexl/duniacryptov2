@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-const API_URL = '/api/coingecko/api/v3/search/trending';
+const API_URL = '/api/coingecko/search/trending';
 
 export default function Mindshare() {
   const [trending, setTrending] = useState([]);

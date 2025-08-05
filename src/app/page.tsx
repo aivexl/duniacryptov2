@@ -1,5 +1,6 @@
 import React from "react";
-import { getAllArticles, addImageUrls, SanityArticleWithImage } from "../utils/sanity";
+import { getAllArticles, addImageUrls } from "../utils/sanity";
+import type { SanityArticleWithImage } from "../utils/sanity";
 import HomeClient from "../components/HomeClient";
 
 export default async function Home() {
