@@ -1,7 +1,4 @@
 {
-  "analytics": {
-    "enabled": true
-  },
   "rewrites": [
     { "source": "/coingecko/:path*", "destination": "https://api.coingecko.com/:path*" },
     { "source": "/gnews/:path*", "destination": "https://gnews.io/:path*" }
