@@ -17,15 +17,30 @@ export async function GET(request: Request) {
             return cookieStore.get(name)?.value;
           },
           set(name: string, value: string, options: { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: 'lax' | 'strict' | 'none' }) {
-            cookieStore.set({ name, value, ...options });
+            try {
+              cookieStore.set({ name, value, ...options });
+            } catch (error) {
+              // Handle cookie setting error
+              console.error('Error setting cookie:', error);
+            }
           },
           remove(name: string, options: { path?: string; domain?: string }) {
-            cookieStore.set({ name, value: '', ...options });
+            try {
+              cookieStore.set({ name, value: '', ...options });
+            } catch (error) {
+              // Handle cookie removal error
+              console.error('Error removing cookie:', error);
+            }
           },
         },
       }
     );
-    await supabase.auth.exchangeCodeForSession(code);
+
+    try {
+      await supabase.auth.exchangeCodeForSession(code);
+    } catch (error) {
+      console.error('Error exchanging code for session:', error);
+    }
   }
 
   // URL to redirect to after sign in process completes
