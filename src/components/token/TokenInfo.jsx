@@ -30,6 +30,15 @@ const TokenInfo = ({ token, pair, timeFrame, chainId }) => {
     const fetchTokenMetadata = async () => {
       if (!token || !token.address) return;
 
+      // Check if Moralis API key is available
+      const moralisApiKey = process.env.NEXT_PUBLIC_MORALIS_API_KEY;
+      
+      if (!moralisApiKey) {
+        console.warn("Moralis API key not found, using CoinGecko API directly");
+        await fetchFromCoinGecko();
+        return;
+      }
+
       try {
         let url;
         const isSolana = chainId === "solana";
@@ -45,12 +54,14 @@ const TokenInfo = ({ token, pair, timeFrame, chainId }) => {
         const response = await fetch(url, {
           headers: {
             accept: "application/json",
-            "X-API-Key": API_KEY,
+            "X-API-Key": moralisApiKey,
           },
         });
 
         if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+          console.warn(`Moralis API error: ${response.status}, trying CoinGecko API`);
+          await fetchFromCoinGecko();
+          return;
         }
 
         const data = await response.json();
@@ -65,9 +76,98 @@ const TokenInfo = ({ token, pair, timeFrame, chainId }) => {
             Array.isArray(data) && data.length > 0 ? data[0] : null
           );
         }
+        setLoading(false);
       } catch (err) {
-        console.error("Error fetching token metadata:", err);
-      } finally {
+        console.error("Error fetching token metadata from Moralis:", err);
+        console.log("Falling back to CoinGecko API");
+        await fetchFromCoinGecko();
+      }
+    };
+
+    // Fallback function to fetch from CoinGecko
+    const fetchFromCoinGecko = async () => {
+      try {
+        console.log("Fetching token data from CoinGecko API...");
+        
+        const symbol = token.symbol?.toLowerCase();
+        if (!symbol) {
+          setTokenMetadata({
+            name: token.name,
+            symbol: token.symbol,
+            logo: token.logo,
+            website: null,
+            twitter: null,
+            telegram: null,
+            discord: null,
+          });
+          setLoading(false);
+          return;
+        }
+
+        const coingeckoApiKey = process.env.NEXT_PUBLIC_COINGECKO_API_KEY;
+        const apiKeyParam = coingeckoApiKey ? `&x_cg_demo_api_key=${coingeckoApiKey}` : '';
+        
+        // First try to search by symbol
+        const searchUrl = `https://api.coingecko.com/api/v3/search?query=${symbol}${apiKeyParam}`;
+        const searchResponse = await fetch(searchUrl);
+        
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json();
+          
+          if (searchData.coins && searchData.coins.length > 0) {
+            // Get the first matching coin
+            const coinId = searchData.coins[0].id;
+            
+            // Now get detailed data for this coin
+            const detailUrl = `https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false${apiKeyParam}`;
+            const detailResponse = await fetch(detailUrl);
+            
+            if (detailResponse.ok) {
+              const coinData = await detailResponse.json();
+              
+              setTokenMetadata({
+                name: coinData.name || token.name,
+                symbol: coinData.symbol?.toUpperCase() || token.symbol,
+                logo: coinData.image?.large || coinData.image?.small || token.logo,
+                website: coinData.links?.homepage?.[0] || null,
+                twitter: coinData.links?.twitter_screen_name ? `https://twitter.com/${coinData.links.twitter_screen_name}` : null,
+                telegram: coinData.links?.telegram_channel_identifier ? `https://t.me/${coinData.links.telegram_channel_identifier}` : null,
+                discord: coinData.links?.repos_url?.github?.[0] || null,
+                market_cap: coinData.market_data?.market_cap?.usd || 0,
+                volume_24h: coinData.market_data?.total_volume?.usd || 0,
+                price_change_24h: coinData.market_data?.price_change_percentage_24h || 0,
+                totalSupply: coinData.market_data?.total_supply || 0,
+                circulatingSupply: coinData.market_data?.circulating_supply || 0,
+              });
+              setLoading(false);
+              return;
+            }
+          }
+        }
+        
+        // Fallback: use basic token info
+        setTokenMetadata({
+          name: token.name,
+          symbol: token.symbol,
+          logo: token.logo,
+          website: null,
+          twitter: null,
+          telegram: null,
+          discord: null,
+        });
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching from CoinGecko:", err);
+        // Use basic token info as final fallback
+        setTokenMetadata({
+          name: token.name,
+          symbol: token.symbol,
+          logo: token.logo,
+          website: null,
+          twitter: null,
+          telegram: null,
+          discord: null,
+        });
         setLoading(false);
       }
     };

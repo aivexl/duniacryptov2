@@ -7,8 +7,9 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newTransactionIds, setNewTransactionIds] = useState(new Set());
-  const [pairData, setPairData] = useState(null);
-  const [tableHeight, setTableHeight] = useState(400); // Default height
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isResizing, setIsResizing] = useState(false);
+  const [height, setHeight] = useState(400);
   const pollInterval = useRef(null);
   const tableRef = useRef(null);
   const resizeRef = useRef(null);
@@ -40,7 +41,7 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
 
     const onMouseDown = (e) => {
       startYRef.current = e.clientY;
-      startHeightRef.current = tableHeight;
+      startHeightRef.current = height;
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     };
@@ -48,7 +49,7 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
     const onMouseMove = (e) => {
       const deltaY = startYRef.current - e.clientY;
       const newHeight = Math.max(200, startHeightRef.current + deltaY);
-      setTableHeight(newHeight);
+      setHeight(newHeight);
     };
 
     const onMouseUp = () => {
@@ -63,14 +64,14 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
     };
-  }, [tableHeight]);
+  }, [height]);
 
   // Set up polling when component mounts and clean up on unmount
   useEffect(() => {
-    fetchTransactions();
-
-    // Set up polling interval for real-time updates
-    pollInterval.current = setInterval(fetchNewTransactions, 10000); // Poll every 10 seconds
+    if (pair && pair.pairAddress) {
+      fetchTransactions();
+      pollInterval.current = setInterval(fetchNewTransactions, 20000); // Poll every 20 seconds
+    }
 
     return () => {
       if (pollInterval.current) {
@@ -78,6 +79,15 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
       }
     };
   }, [pair, chainId]);
+
+  // Update current time every second for real-time timestamp display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch initial transactions
   const fetchTransactions = async () => {
@@ -116,9 +126,36 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
       
       console.log(`Using ${chain} chain for ${symbol} (chainId: ${chainId})`);
       
-      // Use Real Blockchain API for real-time transaction data
-      console.log("Fetching real-time data from Blockchain API...");
+      // Use new Real-time Transaction API
+      console.log("Fetching real-time data from new API...");
       
+      try {
+        const apiUrl = `/api/real-time/transactions?address=${pair.baseToken.address}&chain=${chain}&limit=50`;
+        console.log(`Trying Real-time API: ${apiUrl}`);
+        const response = await fetch(apiUrl);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Real-time API response:", data);
+          
+          if (data.success && data.transactions && data.transactions.length > 0) {
+            setTransactions(data.transactions);
+            console.log(`Real-time transactions loaded from ${data.source}`);
+            setLoading(false);
+            return;
+          } else if (data.error) {
+            console.log(`Real-time API error: ${data.error}`);
+            setError(data.error);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (error) {
+        console.log(`Real-time API failed:`, error.message);
+      }
+      
+      // Fallback to old API if new one fails
+      console.log("Real-time API failed, trying fallback...");
       const blockchainApis = [
         `/api/goldrush/transfers/${pair.baseToken.address}/${chain}`,
         `/api/goldrush/transactions/${pair.baseToken.address}/${chain}`,
@@ -127,38 +164,33 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
       
       for (const apiUrl of blockchainApis) {
         try {
-          console.log(`Trying Blockchain API: ${apiUrl}`);
+          console.log(`Trying fallback API: ${apiUrl}`);
           const response = await fetch(apiUrl);
           
           if (response.ok) {
             const data = await response.json();
-            console.log("Blockchain API response:", data);
+            console.log("Fallback API response:", data);
             
             if (data.transactions && data.transactions.length > 0) {
               setTransactions(data.transactions);
-              setPairData({
-                baseToken: { symbol: pair.baseToken.symbol || "TOKEN" },
-                quoteToken: { symbol: "USD" },
-                pairLabel: `${pair.baseToken.symbol}/USD`,
-              });
-              console.log(`Blockchain transactions loaded from ${data.source}`);
+              console.log(`Fallback transactions loaded from ${data.source}`);
               setLoading(false);
               return;
             } else if (data.error) {
-              console.log(`Blockchain API error: ${data.error}`);
+              console.log(`Fallback API error: ${data.error}`);
               setError(data.error);
               setLoading(false);
               return;
             }
           }
         } catch (error) {
-          console.log(`Blockchain API failed: ${apiUrl}`, error.message);
+          console.log(`Fallback API failed: ${apiUrl}`, error.message);
         }
       }
       
       // If all APIs fail, show error
-      console.log("All Blockchain APIs failed, showing error");
-      setError("Failed to load real-time transactions from Blockchain API");
+      console.log("All APIs failed, showing error");
+      setError("Failed to load real-time transactions");
       setLoading(false);
       
     } catch (error) {
@@ -188,40 +220,44 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
         chain = 'bsc';
       }
 
-      // Use Blockchain API for new transactions
-      const url = `/api/goldrush/transfers/${pair.baseToken.address}/${chain}`;
-      const response = await fetch(url);
+      // Use new Real-time API for new transactions
+      try {
+        const url = `/api/real-time/transactions?address=${pair.baseToken.address}&chain=${chain}&limit=50`;
+        const response = await fetch(url);
 
-      if (!response.ok) {
-        console.error(`Blockchain API error during polling: ${response.status}`);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data && data.transactions && data.transactions.length > 0) {
-        // Check if there are new transactions
-        const currentTransactionIds = new Set(
-          transactions.map((tx) => tx.transaction_hash || tx.transactionHash)
-        );
-
-        const newTxs = data.transactions.filter(
-          (tx) => !currentTransactionIds.has(tx.transaction_hash || tx.transactionHash)
-        );
-
-        if (newTxs.length > 0) {
-          console.log("New Blockchain transactions found:", newTxs.length);
-          setTransactions((prev) => [...newTxs, ...prev]);
-          
-          // Highlight new transactions
-          const newIds = new Set(newTxs.map((tx) => tx.transaction_hash || tx.transactionHash));
-          setNewTransactionIds(newIds);
-          
-          // Remove highlight after 5 seconds
-          setTimeout(() => {
-            setNewTransactionIds(new Set());
-          }, 5000);
+        if (!response.ok) {
+          console.error(`Real-time API error during polling: ${response.status}`);
+          return;
         }
+
+        const data = await response.json();
+
+        if (data.success && data.transactions && data.transactions.length > 0) {
+          // Check if there are new transactions
+          const currentTransactionIds = new Set(
+            transactions.map((tx) => tx.transaction_hash || tx.transactionHash)
+          );
+
+          const newTxs = data.transactions.filter(
+            (tx) => !currentTransactionIds.has(tx.transaction_hash || tx.transactionHash)
+          );
+
+          if (newTxs.length > 0) {
+            console.log("New real-time transactions found:", newTxs.length);
+            setTransactions((prev) => [...newTxs, ...prev]);
+            
+            // Highlight new transactions
+            const newIds = new Set(newTxs.map((tx) => tx.transaction_hash || tx.transactionHash));
+            setNewTransactionIds(newIds);
+            
+            // Remove highlight after 5 seconds
+            setTimeout(() => {
+              setNewTransactionIds(new Set());
+            }, 5000);
+          }
+        }
+      } catch (error) {
+        console.error("Error polling for new real-time transactions:", error);
       }
     } catch (err) {
       console.error("Error polling for new Blockchain transactions:", err);
@@ -232,8 +268,26 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
   const formatTimeAgo = (dateString) => {
     if (!dateString) return "";
 
-    const date = new Date(dateString);
-    const now = new Date();
+    // Handle different timestamp formats
+    let date;
+    if (typeof dateString === 'number') {
+      // If it's a Unix timestamp (seconds), convert to milliseconds
+      date = new Date(dateString * 1000);
+    } else if (typeof dateString === 'string') {
+      // If it's already a date string
+      date = new Date(dateString);
+    } else {
+      // If it's already a Date object
+      date = dateString;
+    }
+
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn("Invalid date format:", dateString);
+      return "Invalid date";
+    }
+
+    const now = currentTime; // Use the currentTime state instead of new Date()
 
     const diffMs = now - date;
     const diffSec = Math.floor(diffMs / 1000);
@@ -358,7 +412,7 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
     if (!tx.baseTokenAmount) return { value: 0, symbol: "" };
 
     const value = parseFloat(tx.baseTokenAmount);
-    const symbol = pairData?.baseToken?.symbol || pair?.baseToken?.symbol || "";
+    const symbol = pair?.baseToken?.symbol || "";
 
     return { value, symbol };
   };
@@ -369,8 +423,7 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
 
     const value = parseFloat(tx.quoteTokenAmount);
     const absValue = Math.abs(value);
-    const symbol =
-      pairData?.quoteToken?.symbol || pair?.quoteToken?.symbol || "";
+    const symbol = pair?.quoteToken?.symbol || "";
 
     return { value: absValue, symbol };
   };
@@ -481,7 +534,7 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
       
       <div
         className="overflow-auto border border-dex-border bg-dex-bg-primary"
-        style={{ height: `${tableHeight}px` }}
+        style={{ height: `${height}px` }}
       >
         <table
           ref={tableRef}
@@ -493,14 +546,10 @@ const DexScreenerTokenTransactions = ({ pair, chainId }) => {
               <th className="px-4 py-3 whitespace-nowrap">TYPE</th>
               <th className="px-4 py-3 text-right whitespace-nowrap">USD</th>
               <th className="px-4 py-3 text-right whitespace-nowrap">
-                {pairData?.baseToken?.symbol ||
-                  pair?.baseToken?.symbol ||
-                  "TOKEN"}
+                {pair?.baseToken?.symbol || "TOKEN"}
               </th>
               <th className="px-4 py-3 text-right whitespace-nowrap">
-                {pairData?.quoteToken?.symbol ||
-                  pair?.quoteToken?.symbol ||
-                  "QUOTE"}
+                {pair?.quoteToken?.symbol || "QUOTE"}
               </th>
               <th className="px-4 py-3 text-right whitespace-nowrap">PRICE</th>
               <th className="px-4 py-3 whitespace-nowrap">MAKER</th>

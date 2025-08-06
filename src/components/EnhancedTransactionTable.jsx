@@ -20,6 +20,7 @@ const EnhancedTransactionTable = ({
   const [searchAddress, setSearchAddress] = useState('');
   const [minAmount, setMinAmount] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Auto refresh every 5 seconds for real-time updates
   useEffect(() => {
@@ -33,6 +34,15 @@ const EnhancedTransactionTable = ({
 
     return () => clearInterval(interval);
   }, [autoRefresh, onLoadMore]);
+
+  // Update current time every second for real-time timestamp display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const formatAddress = (address) => {
     if (!address) return 'N/A';
@@ -67,7 +77,7 @@ const EnhancedTransactionTable = ({
   const formatTime = (timestamp) => {
     if (!timestamp) return 'N/A';
     const date = new Date(timestamp);
-    const now = new Date();
+    const now = currentTime; // Use the currentTime state instead of new Date()
     const diffInSeconds = Math.floor((now - date) / 1000);
     
     if (diffInSeconds < 60) {

@@ -18,6 +18,11 @@ export default function TradingViewCoinInfo({
 
   useEffect(() => {
     fetchMarketData();
+    
+    // Set up real-time updates every 20 seconds
+    const interval = setInterval(fetchMarketData, 20 * 1000);
+    
+    return () => clearInterval(interval);
   }, [symbol]);
 
   const fetchMarketData = async () => {

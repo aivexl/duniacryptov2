@@ -3,12 +3,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import GradientText from "./GradientText";
+import { useAuth } from "../hooks/useAuth";
+import LoginModal from "./auth/LoginModal";
+import SignUpModal from "./auth/SignUpModal";
 
 export default function Navbar() {
   const [navOpen, setNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +33,10 @@ export default function Navbar() {
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   // Check if current path is active
   const isActive = (path: string) => {
     if (path === '/') {
@@ -38,15 +48,16 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 bg-duniacrypto-panel border-b border-gray-800">
-                 <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-                     <div className="flex items-center space-x-3 py-1">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+          <div className="flex items-center space-x-3 py-1">
             <Link href="/" className="flex items-center space-x-3 group no-underline hover:no-underline focus:no-underline active:no-underline" style={{ textDecoration: 'none' }}>
-                                            <img src="/Asset/belugalogo2.png" alt="Beluga Logo" className="h-12 w-12 object-contain group-hover:scale-105 transition-transform" />
-               <GradientText
-                 colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
-                 animationSpeed={2}
-                 className="text-3xl font-bold tracking-tight font-sans leading-relaxed"
-               >
+              <img src="/Asset/belugalogo2.png" alt="Beluga Logo" className="h-12 w-12 object-contain group-hover:scale-105 transition-transform" />
+              <GradientText
+                colors={["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"]}
+                animationSpeed={2}
+                showBorder={false}
+                className="text-3xl font-bold tracking-tight font-sans leading-relaxed"
+              >
                 Beluga
               </GradientText>
             </Link>
@@ -98,6 +109,38 @@ export default function Navbar() {
                 </button>
               </div>
             </form>
+
+            {/* Auth Buttons - Desktop */}
+            <div className="flex items-center space-x-3">
+              {user ? (
+                <div className="flex items-center space-x-3">
+                  <span className="text-gray-300 text-sm">
+                    {user.email}
+                  </span>
+                  <button
+                    onClick={handleSignOut}
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowLoginModal(true)}
+                    className="text-white font-bold hover:text-blue-400 transition-colors duration-200"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => setShowSignUpModal(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
+            </div>
           </nav>
         </div>
       </header>
@@ -164,6 +207,29 @@ export default function Navbar() {
             </svg>
             <span className="text-xs font-medium">Asset</span>
           </Link>
+
+          {/* Auth Button - Mobile */}
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              className="flex flex-col items-center p-2 rounded-lg transition-all duration-200 focus:outline-none focus:no-underline text-white hover:bg-red-500/20 hover:text-red-400"
+            >
+              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="text-xs font-medium">Sign Out</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowLoginModal(true)}
+              className="flex flex-col items-center p-2 rounded-lg transition-all duration-200 focus:outline-none focus:no-underline text-white hover:bg-blue-500/20 hover:text-blue-400"
+            >
+              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span className="text-xs font-medium">Login</span>
+            </button>
+          )}
 
           {/* Hamburger Menu */}
           <button
@@ -243,9 +309,52 @@ export default function Navbar() {
             <Link href="/kamus" className="text-white text-lg font-bold transition block hover:text-blue-400 focus:outline-none focus:no-underline" onClick={() => setNavOpen(false)} style={{borderRadius: 16, textDecoration: 'none'}}>Kamus WEB3</Link>
             <Link href="/about" className="text-white text-lg font-bold transition block hover:text-blue-400 focus:outline-none focus:no-underline" onClick={() => setNavOpen(false)} style={{borderRadius: 16, textDecoration: 'none'}}>About</Link>
             <Link href="/contact" className="text-white text-lg font-bold transition block hover:text-blue-400 focus:outline-none focus:no-underline" onClick={() => setNavOpen(false)} style={{borderRadius: 16, textDecoration: 'none'}}>Contact</Link>
+
+            {/* Auth Buttons - Mobile Menu */}
+            {!user && (
+              <div className="flex flex-col space-y-3 pt-4 border-t border-gray-700">
+                <button
+                  onClick={() => {
+                    setShowLoginModal(true);
+                    setNavOpen(false);
+                  }}
+                  className="text-white text-lg font-bold transition block hover:text-blue-400 focus:outline-none focus:no-underline"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSignUpModal(true);
+                    setNavOpen(false);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
           </nav>
         </div>
       )}
+
+      {/* Auth Modals */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSwitchToSignUp={() => {
+          setShowLoginModal(false);
+          setShowSignUpModal(true);
+        }}
+      />
+      
+      <SignUpModal
+        isOpen={showSignUpModal}
+        onClose={() => setShowSignUpModal(false)}
+        onSwitchToLogin={() => {
+          setShowSignUpModal(false);
+          setShowLoginModal(true);
+        }}
+      />
     </>
   );
 } 

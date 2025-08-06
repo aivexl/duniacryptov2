@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { Analytics } from "@vercel/analytics/next";
+import { AuthProvider } from "../contexts/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-            <head>
+      <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/Asset/belugalogo2.png" type="image/png" />
         <link rel="apple-touch-icon" href="/Asset/belugalogo2.png" />
@@ -58,13 +59,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-900`}
       >
         <ErrorBoundary>
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <AuthProvider>
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </AuthProvider>
         </ErrorBoundary>
         <Analytics />
       </body>

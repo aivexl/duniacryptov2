@@ -32,7 +32,8 @@ export const CoinGeckoProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   useEffect(() => {
     fetchAll();
-    const interval = setInterval(fetchAll, 24 * 60 * 60 * 1000);
+    // Update every 20 seconds for real-time data
+    const interval = setInterval(fetchAll, 20 * 1000);
     return () => clearInterval(interval);
   }, []);
 

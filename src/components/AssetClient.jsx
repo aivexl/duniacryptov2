@@ -790,6 +790,11 @@ function CryptoTableWithSearch({ searchQuery, filter, dateRange, onCoinClick }) 
     };
 
     fetchCoins();
+    
+    // Set up real-time updates every 20 seconds
+    const interval = setInterval(fetchCoins, 20 * 1000);
+    
+    return () => clearInterval(interval);
   }, [dateRange]);
 
   const getFilteredCoins = () => {

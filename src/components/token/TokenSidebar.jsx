@@ -5,6 +5,7 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
   const [pairStats, setPairStats] = useState(null);
   const [tokenMetadata, setTokenMetadata] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTimeFrame, setSelectedTimeFrame] = useState("24h");
 
   // Block explorer URLs by chain
@@ -31,50 +32,6 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
     "24h": "24h",
   };
 
-  // Mock data for when API fails
-  const getMockPairStats = () => ({
-    "5min": {
-      priceChange: 0.5,
-      buys: 150,
-      sells: 120,
-      totalVolume: 2500000,
-      buyVolume: 1400000,
-      sellVolume: 1100000,
-      buyers: 45,
-      sellers: 38,
-    },
-    "1h": {
-      priceChange: 1.2,
-      buys: 450,
-      sells: 380,
-      totalVolume: 7500000,
-      buyVolume: 4200000,
-      sellVolume: 3300000,
-      buyers: 120,
-      sellers: 95,
-    },
-    "4h": {
-      priceChange: -0.8,
-      buys: 1200,
-      sells: 1350,
-      totalVolume: 18000000,
-      buyVolume: 8500000,
-      sellVolume: 9500000,
-      buyers: 280,
-      sellers: 320,
-    },
-    "24h": {
-      priceChange: 2.5,
-      buys: 8500,
-      sells: 7200,
-      totalVolume: 125000000,
-      buyVolume: 68000000,
-      sellVolume: 57000000,
-      buyers: 1200,
-      sellers: 980,
-    },
-  });
-
   // Fetch token metadata
   useEffect(() => {
     const fetchTokenMetadata = async () => {
@@ -83,10 +40,155 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
         return;
       }
 
-      // Check if Moralis API key is available
-      const moralisApiKey = process.env.NEXT_PUBLIC_MORALIS_API_KEY;
-      if (!moralisApiKey) {
-        console.warn("Moralis API key not found, using mock metadata");
+      setIsRefreshing(true);
+
+      // Try new Real-time Market Data API first
+      try {
+        const symbol = token.symbol;
+        const address = token.address;
+        const chain = getChainFromChainId(chainId);
+        
+        const apiUrl = `/api/real-time/market-data?address=${address}&symbol=${symbol}&chain=${chain}`;
+        console.log("Fetching token metadata from real-time API:", apiUrl);
+        
+        const response = await fetch(apiUrl);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Real-time market data response:", data);
+          
+          if (data.success && data.data) {
+            const marketData = data.data;
+            setTokenMetadata({
+              name: marketData.name,
+              symbol: marketData.symbol,
+              decimals: 18, // Default for most tokens
+              total_supply: marketData.total_supply,
+              contract_type: 'ERC20',
+              percent_change_24h: marketData.price_change_24h || 0,
+              market_cap: marketData.market_cap || 0,
+              verified: true, // Assume verified if we get data
+              source: data.source,
+              price_usd: marketData.price_usd,
+              volume_24h: marketData.volume_24h,
+              circulating_supply: marketData.circulating_supply,
+              fully_diluted_valuation: marketData.fully_diluted_valuation,
+              high_24h: marketData.high_24h,
+              low_24h: marketData.low_24h,
+              ath: marketData.ath,
+              atl: marketData.atl,
+              market_cap_rank: marketData.market_cap_rank,
+              last_updated: marketData.last_updated,
+              logo: token.logo,
+              website: token.website,
+              twitter: token.twitter,
+              telegram: token.telegram,
+              discord: token.discord
+            });
+            setLoading(false);
+            setIsRefreshing(false);
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn("Real-time API error, trying fallback:", error);
+      }
+
+      // Fallback to old method
+        await fetchFromCoinGecko();
+    };
+
+    // Helper function to get chain name from chainId
+    const getChainFromChainId = (chainId) => {
+      if (chainId === '0x1' || chainId === '1') return 'ethereum';
+      if (chainId === '0x38' || chainId === '56') return 'bsc';
+      if (chainId === '0x89' || chainId === '137') return 'polygon';
+      if (chainId === '0xa86a' || chainId === '43114') return 'avalanche';
+      if (chainId === '0xa4b1' || chainId === '42161') return 'arbitrum';
+      if (chainId === '0xa' || chainId === '10') return 'optimism';
+      return 'bsc'; // Default
+    };
+
+    // Fallback function to fetch from CoinGecko
+    const fetchFromCoinGecko = async () => {
+      try {
+        console.log("Fetching token data from CoinGecko API...");
+        
+        // Try to get token data from CoinGecko by symbol
+        const symbol = token.symbol?.toLowerCase();
+        if (!symbol) {
+          setTokenMetadata({
+            name: token.name,
+            symbol: token.symbol,
+            logo: token.logo,
+            website: token.website,
+            twitter: token.twitter,
+            telegram: token.telegram,
+            discord: token.discord,
+          });
+          setLoading(false);
+          setIsRefreshing(false);
+          return;
+        }
+
+        const coingeckoApiKey = process.env.NEXT_PUBLIC_COINGECKO_API_KEY;
+        const apiKeyParam = coingeckoApiKey ? `&x_cg_demo_api_key=${coingeckoApiKey}` : '';
+        
+        // First try to search by symbol
+        const searchUrl = `https://api.coingecko.com/api/v3/search?query=${symbol}${apiKeyParam}`;
+        const searchResponse = await fetch(searchUrl);
+        
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json();
+          
+          if (searchData.coins && searchData.coins.length > 0) {
+            // Get the first matching coin
+            const coinId = searchData.coins[0].id;
+            
+            // Now get detailed data for this coin
+            const detailUrl = `https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false${apiKeyParam}`;
+            const detailResponse = await fetch(detailUrl);
+            
+            if (detailResponse.ok) {
+              const coinData = await detailResponse.json();
+              
+          setTokenMetadata({
+            name: coinData.name || token.name,
+            symbol: coinData.symbol?.toUpperCase() || token.symbol,
+                logo: coinData.image?.large || coinData.image?.small || token.logo,
+                website: coinData.links?.homepage?.[0] || null,
+                twitter: coinData.links?.twitter_screen_name ? `https://twitter.com/${coinData.links.twitter_screen_name}` : null,
+                telegram: coinData.links?.telegram_channel_identifier ? `https://t.me/${coinData.links.telegram_channel_identifier}` : null,
+                discord: coinData.links?.repos_url?.github?.[0] || null,
+                market_cap: coinData.market_data?.market_cap?.usd || 0,
+                volume_24h: coinData.market_data?.total_volume?.usd || 0,
+                price_change_24h: coinData.market_data?.price_change_percentage_24h || 0,
+                totalSupply: coinData.market_data?.total_supply || 0,
+                circulatingSupply: coinData.market_data?.circulating_supply || 0,
+              });
+              setLastUpdated(new Date()); // Force update the last updated time
+              setLoading(false);
+              setIsRefreshing(false);
+              return;
+            }
+          }
+        }
+        
+        // Fallback: use basic token info
+          setTokenMetadata({
+            name: token.name,
+            symbol: token.symbol,
+            logo: token.logo,
+            website: null,
+            twitter: null,
+            telegram: null,
+            discord: null,
+          });
+        setLoading(false);
+        setIsRefreshing(false);
+      } catch (err) {
+        console.error("Error fetching from CoinGecko:", err);
+        // Use basic token info as final fallback
         setTokenMetadata({
           name: token.name,
           symbol: token.symbol,
@@ -97,89 +199,36 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
           discord: null,
         });
         setLoading(false);
-        return;
-      }
-
-      try {
-        let url;
-        const isSolana = chainId === "solana";
-
-        if (isSolana) {
-          url = `https://solana-gateway.moralis.io/token/mainnet/${token.address}/metadata`;
-        } else {
-          url = `https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chainId}&addresses[0]=${token.address}`;
-        }
-
-        const response = await fetch(url, {
-          headers: {
-            accept: "application/json",
-            "X-API-Key": moralisApiKey,
-          },
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.warn("Moralis API key is invalid or expired, using mock metadata");
-            setTokenMetadata({
-              name: token.name,
-              symbol: token.symbol,
-              logo: token.logo,
-              website: null,
-              twitter: null,
-              telegram: null,
-              discord: null,
-            });
-            setLoading(false);
-            return;
-          }
-          throw new Error(`API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        // Handle different response formats
-        if (isSolana) {
-          setTokenMetadata(data);
-        } else {
-          // EVM response is an array, take first item
-          setTokenMetadata(
-            Array.isArray(data) && data.length > 0 ? data[0] : null
-          );
-        }
-      } catch (err) {
-        console.error("Error fetching token metadata:", err);
-        // Use mock metadata when API fails
-        setTokenMetadata({
-          name: token.name,
-          symbol: token.symbol,
-          logo: token.logo,
-          website: null,
-          twitter: null,
-          telegram: null,
-          discord: null,
-        });
       }
     };
 
     fetchTokenMetadata();
+    
+    // Set up real-time updates every 20 seconds
+    const interval = setInterval(fetchTokenMetadata, 20 * 1000);
+    
+    return () => clearInterval(interval);
   }, [token, chainId]);
 
   // Fetch pair stats
   useEffect(() => {
     const fetchPairStats = async () => {
+      console.log("fetchPairStats called with:", { pair, chainId, token });
+      
+      setIsRefreshing(true);
+      
       if (!pair || !pair.pairAddress || pair.pairAddress === "0x0000000000000000000000000000000000000000") {
-        // Use mock data when no pair address
-        setPairStats(getMockPairStats());
+        console.log("No valid pair address");
         setLoading(false);
+        setIsRefreshing(false);
         return;
       }
 
       // Check if Moralis API key is available
       const moralisApiKey = process.env.NEXT_PUBLIC_MORALIS_API_KEY;
       if (!moralisApiKey) {
-        console.warn("Moralis API key not found, using mock data");
-        setPairStats(getMockPairStats());
-        setLoading(false);
+        console.warn("Moralis API key not found, using CoinGecko API directly");
+        await fetchPairStatsFromCoinGecko();
         return;
       }
 
@@ -202,27 +251,167 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
 
         if (!response.ok) {
           if (response.status === 401) {
-            console.warn("Moralis API key is invalid or expired, using mock data");
-            setPairStats(getMockPairStats());
-            setLoading(false);
+            console.warn("Moralis API key is invalid or expired, trying CoinGecko API");
+            await fetchPairStatsFromCoinGecko();
             return;
           }
-          throw new Error(`API error: ${response.status}`);
+          if (response.status === 400) {
+            console.warn("Moralis API returned 400 error (bad request), trying CoinGecko API");
+            await fetchPairStatsFromCoinGecko();
+            return;
+          }
+          console.warn(`Moralis API error: ${response.status}, trying CoinGecko API`);
+          await fetchPairStatsFromCoinGecko();
+          return;
         }
 
         const data = await response.json();
         setPairStats(data);
+        setLastUpdated(new Date()); // Force update the last updated time
         setLoading(false);
+        setIsRefreshing(false);
       } catch (err) {
-        console.error("Error fetching pair stats:", err);
-        // Use mock data when API fails
-        setPairStats(getMockPairStats());
+        console.error("Error fetching pair stats from Moralis:", err);
+        console.log("Falling back to CoinGecko API");
+        await fetchPairStatsFromCoinGecko();
+      }
+    };
+
+    // Fallback function to fetch pair stats from CoinGecko and DexScreener
+    const fetchPairStatsFromCoinGecko = async () => {
+      try {
+        console.log("Fetching pair stats from CoinGecko and DexScreener APIs...");
+        
+        const symbol = token?.symbol?.toLowerCase();
+        if (!symbol) {
+          console.warn("No token symbol available");
+          setLoading(false);
+          setIsRefreshing(false);
+          return;
+        }
+
+        const coingeckoApiKey = process.env.NEXT_PUBLIC_COINGECKO_API_KEY;
+        const apiKeyParam = coingeckoApiKey ? `&x_cg_demo_api_key=${coingeckoApiKey}` : '';
+        
+        // First search for the coin by symbol
+        const searchUrl = `https://api.coingecko.com/api/v3/search?query=${symbol}${apiKeyParam}`;
+        const searchResponse = await fetch(searchUrl);
+        
+        let coinData = null;
+        
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json();
+          
+          if (searchData.coins && searchData.coins.length > 0) {
+            // Get the first matching coin
+            const coinId = searchData.coins[0].id;
+            
+            // Now get detailed data for this coin
+            const detailUrl = `https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false${apiKeyParam}`;
+            const detailResponse = await fetch(detailUrl);
+            
+            if (detailResponse.ok) {
+              coinData = await detailResponse.json();
+            }
+          }
+        }
+        
+        // Try to get DexScreener data for more detailed trading info
+        let dexScreenerData = null;
+        try {
+          // Try searching by token address first if available
+          let dexScreenerUrl;
+          if (token.address && token.address !== "0x0000000000000000000000000000000000000000") {
+            dexScreenerUrl = `https://api.dexscreener.com/latest/dex/tokens/${token.address}`;
+          } else {
+            dexScreenerUrl = `https://api.dexscreener.com/latest/dex/search?q=${symbol}`;
+          }
+          
+          const dexScreenerResponse = await fetch(dexScreenerUrl);
+          
+          if (dexScreenerResponse.ok) {
+            const dexScreenerResult = await dexScreenerResponse.json();
+            if (dexScreenerResult.pairs && dexScreenerResult.pairs.length > 0) {
+              // Get the most liquid pair (highest volume)
+              dexScreenerData = dexScreenerResult.pairs.reduce((prev, current) => {
+                const prevVolume = parseFloat(prev.volume?.h24 || 0);
+                const currentVolume = parseFloat(current.volume?.h24 || 0);
+                return currentVolume > prevVolume ? current : prev;
+              });
+            }
+          }
+        } catch (dexErr) {
+          console.warn("DexScreener API failed:", dexErr);
+        }
+        
+        // Create comprehensive stats combining CoinGecko and DexScreener data
+        if (coinData || dexScreenerData) {
+          const stats = {
+            "5min": {
+              priceChange: dexScreenerData?.priceChange?.m5 || coinData?.market_data?.price_change_percentage_5m_in_currency?.usd || 0,
+              totalVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.05 : coinData?.market_data?.total_volume?.usd * 0.05 || 0,
+              buyVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.03 : coinData?.market_data?.total_volume?.usd * 0.03 || 0,
+              sellVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.02 : coinData?.market_data?.total_volume?.usd * 0.02 || 0,
+              buys: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.05) : 0,
+              sells: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.04) : 0,
+              buyers: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.015) : 0,
+              sellers: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.012) : 0,
+            },
+            "1h": {
+              priceChange: dexScreenerData?.priceChange?.h1 || coinData?.market_data?.price_change_percentage_1h_in_currency?.usd || 0,
+              totalVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.15 : coinData?.market_data?.total_volume?.usd * 0.15 || 0,
+              buyVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.09 : coinData?.market_data?.total_volume?.usd * 0.09 || 0,
+              sellVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.06 : coinData?.market_data?.total_volume?.usd * 0.06 || 0,
+              buys: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.15) : 0,
+              sells: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.12) : 0,
+              buyers: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.045) : 0,
+              sellers: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.036) : 0,
+            },
+            "4h": {
+              priceChange: dexScreenerData?.priceChange?.h4 || coinData?.market_data?.price_change_percentage_4h_in_currency?.usd || 0,
+              totalVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.4 : coinData?.market_data?.total_volume?.usd * 0.4 || 0,
+              buyVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.24 : coinData?.market_data?.total_volume?.usd * 0.24 || 0,
+              sellVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.16 : coinData?.market_data?.total_volume?.usd * 0.16 || 0,
+              buys: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.4) : 0,
+              sells: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.32) : 0,
+              buyers: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.12) : 0,
+              sellers: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.096) : 0,
+            },
+            "24h": {
+              priceChange: dexScreenerData?.priceChange?.h24 || coinData?.market_data?.price_change_percentage_24h || 0,
+              totalVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) : coinData?.market_data?.total_volume?.usd || 0,
+              buyVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.6 : coinData?.market_data?.total_volume?.usd * 0.6 || 0,
+              sellVolume: dexScreenerData?.volume?.h24 ? parseFloat(dexScreenerData.volume.h24) * 0.4 : coinData?.market_data?.total_volume?.usd * 0.4 || 0,
+              buys: dexScreenerData?.txns?.h24 ? parseInt(dexScreenerData.txns.h24) : 0,
+              sells: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.8) : 0,
+              buyers: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.3) : 0,
+              sellers: dexScreenerData?.txns?.h24 ? Math.floor(parseInt(dexScreenerData.txns.h24) * 0.24) : 0,
+            }
+          };
+          
+          setPairStats(stats);
+          setLastUpdated(new Date()); // Force update the last updated time
+          setLoading(false);
+          setIsRefreshing(false);
+        } else {
+          console.error("No data available from APIs");
         setLoading(false);
+          setIsRefreshing(false);
+        }
+      } catch (err) {
+        console.error("Error fetching pair stats from APIs:", err);
+        setLoading(false);
+        setIsRefreshing(false);
       }
     };
 
     fetchPairStats();
-  }, [pair, chainId]);
+    
+    // Set up real-time updates every 20 seconds
+    const interval = setInterval(fetchPairStats, 20 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [pair, chainId, token]);
 
   const handleTimeFrameChange = (timeFrame) => {
     setSelectedTimeFrame(timeFrame);
@@ -310,9 +499,24 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
     return `${years}y ${months}m ${days}d`;
   };
 
+  const formatTimeSinceLastUpdate = () => {
+    const diffInMs = currentTime - lastUpdated;
+    const diffInSeconds = Math.floor(diffInMs / 1000);
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    
+    if (diffInSeconds < 60) return `${diffInSeconds}s`;
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    if (diffInHours < 24) return `${diffInHours}h`;
+    return `${Math.floor(diffInHours / 24)}d`;
+  };
+
   const formatPercentChange = (value) => {
+    console.log("formatPercentChange called with:", value);
     if (!value && value !== 0) return "0.00%";
-    return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return "0.00%";
+    return `${numValue >= 0 ? "+" : ""}${numValue.toFixed(2)}%`;
   };
 
   const calculateRatio = (a, b) => {
@@ -321,10 +525,22 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
   };
 
   const getTimePeriodData = (period) => {
-    if (!pairStats) return { priceChange: 0, buys: 0, sells: 0, totalVolume: 0, buyVolume: 0, sellVolume: 0, buyers: 0, sellers: 0 };
+    console.log("getTimePeriodData called with period:", period);
+    console.log("pairStats:", pairStats);
+    console.log("timeFrameMap:", timeFrameMap);
     
-    const periodData = pairStats[timeFrameMap[period]] || {};
-    return {
+    if (!pairStats) {
+      console.log("No pairStats available, returning default");
+      return { priceChange: 0, buys: 0, sells: 0, totalVolume: 0, buyVolume: 0, sellVolume: 0, buyers: 0, sellers: 0 };
+    }
+    
+    const mappedPeriod = timeFrameMap[period];
+    console.log("Mapped period:", mappedPeriod);
+    
+    const periodData = pairStats[mappedPeriod] || {};
+    console.log("Period data for", period, ":", periodData);
+    
+    const result = {
       priceChange: periodData.priceChange || 0,
       buys: periodData.buys || 0,
       sells: periodData.sells || 0,
@@ -334,6 +550,9 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
       buyers: periodData.buyers || 0,
       sellers: periodData.sellers || 0,
     };
+    
+    console.log("Returning data for", period, ":", result);
+    return result;
   };
 
   const getTokenLinks = () => {
@@ -348,12 +567,22 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
   };
 
   const getMarketCapOrFDV = (type = "fdv") => {
-    if (!pair || !pair.priceUsd) return 0;
+    // Try to get from tokenMetadata first (CoinGecko data)
+    if (type === "fdv" && tokenMetadata?.market_cap) {
+      return tokenMetadata.market_cap;
+    }
+    if (type === "market_cap" && tokenMetadata?.market_cap) {
+      return tokenMetadata.market_cap;
+    }
     
+    // Fallback to calculation if we have price and supply
+    if (pair?.priceUsd) {
     const price = parseFloat(pair.priceUsd);
     const supply = type === "fdv" ? (tokenMetadata?.totalSupply || 0) : (tokenMetadata?.circulatingSupply || 0);
-    
     return price * supply;
+    }
+    
+    return 0;
   };
 
   const shortenAddress = (address) => {
@@ -384,6 +613,31 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
   const creationTime = pair?.pairCreatedAt;
   const currentPeriodData = getTimePeriodData(selectedTimeFrame);
   const tokenLinks = getTokenLinks();
+  
+  // Add last updated timestamp that updates with real-time data
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Update last updated time whenever data is refreshed
+  useEffect(() => {
+    setLastUpdated(new Date());
+  }, [pairStats, tokenMetadata]);
+  
+  // Update current time every second for real-time display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  console.log("Current period data:", currentPeriodData);
+  console.log("Selected timeframe:", selectedTimeFrame);
+  console.log("Pair stats:", pairStats);
+  console.log("Last updated:", lastUpdated);
+  console.log("Current time:", currentTime);
+  console.log("Time since last update:", formatTimeSinceLastUpdate());
 
   if (loading) {
     return (
@@ -397,6 +651,31 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
                 <div key={i} className="h-8 bg-gray-700 rounded"></div>
               ))}
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if no data is available
+  if (!pairStats && !loading) {
+    return (
+      <div className="w-full lg:w-80 bg-gray-900 border-l border-gray-800 overflow-y-auto">
+        <div className="p-4">
+          <div className="text-center text-gray-400">
+            <div className="mb-4">
+              <svg className="w-12 h-12 mx-auto text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.47-.881-6.08-2.33" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
+            <p className="text-sm">Unable to fetch trading data from APIs. Please try again later.</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>
@@ -669,6 +948,18 @@ const TokenSidebar = ({ token, pair, timeFrame, chainId }) => {
 
       {/* Pair Details Section */}
       <div className="border-b border-gray-800">
+        {/* Last Updated Section */}
+        <div className="p-2 border-b border-gray-800 flex justify-between items-center">
+          <div className="text-xs text-gray-400">Last Updated</div>
+          <div className="flex items-center space-x-1">
+            <div className="text-xs">{formatTimeSinceLastUpdate()}</div>
+            {isRefreshing && (
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Updating..."></div>
+            )}
+          </div>
+        </div>
+        
+        {/* Age Section (if creation time is available) */}
         {creationTime && (
           <div className="p-2 border-b border-gray-800 flex justify-between items-center">
             <div className="text-xs text-gray-400">Age</div>

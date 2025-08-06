@@ -49,8 +49,8 @@ const DexScreenerChartTxnsLayout = ({ coinData, symbol }) => {
     if (!coinData) return null;
 
     return {
-      symbol: symbol,
-      name: coinData.name || symbol,
+        symbol: symbol,
+        name: coinData.name || symbol,
       address: mockPair?.pairAddress || "0x0000000000000000000000000000000000000000",
       logo: coinData.image?.small || coinData.image?.thumb || "/images/token-default.svg",
     };
@@ -120,63 +120,63 @@ const DexScreenerChartTxnsLayout = ({ coinData, symbol }) => {
     <div className="flex h-full bg-dex-bg-primary">
       {/* Main Content */}
       <div className="flex flex-col flex-1">
-        {/* Chart Section */}
-        <div
-          className="relative bg-dex-bg-secondary rounded-lg p-4"
-          style={{ height: `${chartHeight}px` }}
-        >
-          <div className="absolute inset-0">
-            <DexScreenerTokenChart 
-              key={`chart-${coinData?.id || symbol}-${timeFrame}`}
-              pair={mockPair}
-              timeFrame={timeFrame}
-              onTimeFrameChange={handleTimeFrameChange}
-            />
-          </div>
-        </div>
-
-        {/* Resize Handle */}
-        <div
-          className="h-2 bg-dex-bg-secondary hover:bg-dex-blue cursor-ns-resize flex items-center justify-center"
-          onMouseDown={handleMouseDown}
-        >
-          <div className="w-10 h-1 bg-gray-600 rounded-full"></div>
-        </div>
-
-        {/* Tabs Section */}
-        <div className="bg-dex-bg-primary">
-          <DexScreenerTokenTabs
-            activeTab={activeTab}
-            onChange={handleTabChange}
-            isSolana={isSolana}
+      {/* Chart Section */}
+      <div
+        className="relative bg-dex-bg-secondary rounded-lg p-4"
+        style={{ height: `${chartHeight}px` }}
+      >
+        <div className="absolute inset-0">
+          <DexScreenerTokenChart 
+            key={`chart-${coinData?.id || symbol}-${timeFrame}`}
+            pair={mockPair}
+            timeFrame={timeFrame}
+            onTimeFrameChange={handleTimeFrameChange}
           />
         </div>
+      </div>
 
-        {/* Content Section */}
-        <div className="flex-1 bg-dex-bg-primary p-4">
-          {activeTab === "transactions" && (
-            <DexScreenerTokenTransactions
-              pair={mockPair}
-              chainId={mockPair.chainId}
-            />
-          )}
-          {activeTab === "holders" && !isSolana && (
-            <DexScreenerTokenHolders
-              token={{ address: mockPair.baseToken?.address || mockPair.pairAddress }}
-              chainId={mockPair.chainId}
-            />
-          )}
-          {activeTab === "holder-insights" && !isSolana && (
-            <div className="p-4 text-center text-dex-text-secondary">
-              Holder insights coming soon...
-            </div>
-          )}
-          {activeTab === "snipers" && (
-            <div className="p-4 text-center text-dex-text-secondary">
-              Snipers data coming soon...
-            </div>
-          )}
-        </div>
+      {/* Resize Handle */}
+      <div
+        className="h-2 bg-dex-bg-secondary hover:bg-dex-blue cursor-ns-resize flex items-center justify-center"
+        onMouseDown={handleMouseDown}
+      >
+        <div className="w-10 h-1 bg-gray-600 rounded-full"></div>
+      </div>
+
+      {/* Tabs Section */}
+      <div className="bg-dex-bg-primary">
+        <DexScreenerTokenTabs
+          activeTab={activeTab}
+          onChange={handleTabChange}
+          isSolana={isSolana}
+        />
+      </div>
+
+      {/* Content Section */}
+      <div className="flex-1 bg-dex-bg-primary p-4">
+        {activeTab === "transactions" && (
+          <DexScreenerTokenTransactions
+            pair={mockPair}
+            chainId={mockPair.chainId}
+          />
+        )}
+        {activeTab === "holders" && !isSolana && (
+          <DexScreenerTokenHolders
+            token={{ address: mockPair.baseToken?.address || mockPair.pairAddress }}
+            chainId={mockPair.chainId}
+          />
+        )}
+        {activeTab === "holder-insights" && !isSolana && (
+          <div className="p-4 text-center text-dex-text-secondary">
+            Holder insights coming soon...
+          </div>
+        )}
+        {activeTab === "snipers" && (
+          <div className="p-4 text-center text-dex-text-secondary">
+            Snipers data coming soon...
+          </div>
+        )}
+      </div>
       </div>
 
       {/* Sidebar - Always visible */}

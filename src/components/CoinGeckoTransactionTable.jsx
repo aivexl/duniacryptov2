@@ -7,6 +7,7 @@ const CoinGeckoTransactionTable = ({ data, loading, error, pagination, onLoadMor
   const [sortField, setSortField] = useState('timestamp');
   const [sortDirection, setSortDirection] = useState('desc');
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Auto refresh every 2 seconds for more frequent updates
   useEffect(() => {
@@ -16,10 +17,19 @@ const CoinGeckoTransactionTable = ({ data, loading, error, pagination, onLoadMor
       if (onLoadMore) {
         onLoadMore();
       }
-    }, 2000); // Changed from 5000 to 2000 for more frequent updates
+    }, 20000); // Update every 20 seconds for real-time data
 
     return () => clearInterval(interval);
   }, [autoRefresh, onLoadMore]);
+
+  // Update current time every second for real-time timestamp display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const formatAddress = (address) => {
     if (!address) return 'N/A';
@@ -63,7 +73,7 @@ const CoinGeckoTransactionTable = ({ data, loading, error, pagination, onLoadMor
   const formatTime = (timestamp) => {
     if (!timestamp) return 'N/A';
     const date = new Date(timestamp * 1000);
-    const now = new Date();
+    const now = currentTime; // Use the currentTime state instead of new Date()
     const diffInSeconds = Math.floor((now - date) / 1000);
     
     // Show very detailed time for recent transactions

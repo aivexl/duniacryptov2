@@ -9,6 +9,7 @@ const MoralisTransactionTable = ({ data, loading, error, pagination, onLoadMore,
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [filterType, setFilterType] = useState('all'); // all, buys, sells, transfers
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Auto refresh every 3 seconds for stable updates
   useEffect(() => {
@@ -22,6 +23,15 @@ const MoralisTransactionTable = ({ data, loading, error, pagination, onLoadMore,
 
     return () => clearInterval(interval);
   }, [autoRefresh, onLoadMore]);
+
+  // Update current time every second for real-time timestamp display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const formatAddress = (address) => {
     if (!address) return 'N/A';
@@ -56,7 +66,7 @@ const MoralisTransactionTable = ({ data, loading, error, pagination, onLoadMore,
   const formatTime = (timestamp) => {
     if (!timestamp) return 'N/A';
     const date = new Date(timestamp);
-    const now = new Date();
+    const now = currentTime; // Use the currentTime state instead of new Date()
     const diffInSeconds = Math.floor((now - date) / 1000);
     
     if (diffInSeconds < 60) {

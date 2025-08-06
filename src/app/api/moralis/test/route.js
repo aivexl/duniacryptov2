@@ -29,11 +29,18 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    // Test with a popular Ethereum address (Vitalik's address)
-    const testAddress = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
-    const url = `https://deep-index.moralis.io/api/v2.2/${testAddress}/transactions?chain=eth&limit=5`;
+    // Get current timestamp and 30 days ago for fresh data
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+    const fromDate = thirtyDaysAgo.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+    // Test with a popular Ethereum wallet address (from the example)
+    const testAddress = '0xcB1C1FdE09f811B294172696404e88E658659905';
+    const url = `https://deep-index.moralis.io/api/v2.2/wallets/${testAddress}/swaps?chain=eth&order=DESC&from_date=${fromDate}&limit=10`;
     
     console.log('Making request to:', url);
+    console.log('Using API Key:', moralisApiKey.substring(0, 20) + '...');
+    console.log('Fetching data from:', fromDate, '(30 days ago) to now');
     
     const response = await fetch(url, {
       headers: {
@@ -64,6 +71,16 @@ export async function GET() {
     const data = await response.json();
     
     console.log('SUCCESS: API call successful');
+    console.log('Response data keys:', Object.keys(data));
+    console.log('Number of swaps:', data.result?.length || 0);
+    
+    // Filter to only include recent transactions (last 30 days)
+    const recentSwaps = data.result ? data.result.filter(swap => {
+      const swapDate = new Date(swap.blockTimestamp);
+      return swapDate >= thirtyDaysAgo;
+    }) : [];
+    
+    console.log('Recent swaps (last 30 days):', recentSwaps.length);
     
     return NextResponse.json({
       success: true,
@@ -71,14 +88,36 @@ export async function GET() {
       message: 'Moralis API is working correctly',
       testData: {
         address: testAddress,
-        transactions: data.result?.length || 0,
-        sampleTransaction: data.result?.[0] ? {
-          hash: data.result[0].hash,
-          from: data.result[0].from_address,
-          to: data.result[0].to_address,
-          value: data.result[0].value,
-          timestamp: data.result[0].block_timestamp
-        } : null
+        totalSwaps: data.result?.length || 0,
+        recentSwaps: recentSwaps.length,
+        fromDate: fromDate,
+        toDate: now.toISOString(),
+        sampleSwap: recentSwaps.length > 0 ? {
+          transactionHash: recentSwaps[0].transactionHash,
+          transactionType: recentSwaps[0].transactionType,
+          walletAddress: recentSwaps[0].walletAddress,
+          pairAddress: recentSwaps[0].pairAddress,
+          pairLabel: recentSwaps[0].pairLabel,
+          exchangeName: recentSwaps[0].exchangeName,
+          totalValueUsd: recentSwaps[0].totalValueUsd,
+          blockTimestamp: recentSwaps[0].blockTimestamp,
+          blockNumber: recentSwaps[0].blockNumber,
+          bought: recentSwaps[0].bought ? {
+            symbol: recentSwaps[0].bought.symbol,
+            name: recentSwaps[0].bought.name,
+            amount: recentSwaps[0].bought.amount,
+            usdPrice: recentSwaps[0].bought.usdPrice,
+            usdAmount: recentSwaps[0].bought.usdAmount
+          } : null,
+          sold: recentSwaps[0].sold ? {
+            symbol: recentSwaps[0].sold.symbol,
+            name: recentSwaps[0].sold.name,
+            amount: recentSwaps[0].sold.amount,
+            usdPrice: recentSwaps[0].sold.usdPrice,
+            usdAmount: recentSwaps[0].sold.usdAmount
+          } : null
+        } : null,
+        responseKeys: Object.keys(data)
       }
     });
 
