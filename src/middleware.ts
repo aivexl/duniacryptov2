@@ -27,23 +27,9 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // if user is signed in and the current path is / redirect the user to /account
-  if (user && request.nextUrl.pathname === '/') {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
-
-  // if user is not signed in and the current path is not / redirect the user to /
-  if (!user && request.nextUrl.pathname !== '/') {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
+  // Only handle session management, no redirects or access control
+  // This prevents infinite redirect loops
+  await supabase.auth.getUser()
 
   return supabaseResponse
 }
